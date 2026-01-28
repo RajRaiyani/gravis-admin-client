@@ -384,6 +384,34 @@ export default function ProductDetails() {
               </div>
             )}
 
+            {product.technical_details &&
+              Array.isArray(product.technical_details) &&
+              product.technical_details.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Technical Details
+                  </p>
+                  <dl className="space-y-2">
+                    {product.technical_details
+                      .filter(
+                        (d: { label?: string; value?: string }) =>
+                          d && (d.label || d.value)
+                      )
+                      .map((d: { label?: string; value?: string }, idx: number) => (
+                        <div
+                          key={idx}
+                          className="flex flex-wrap gap-x-2 text-base"
+                        >
+                          <dt className="font-medium text-muted-foreground">
+                            {d.label || "—"}:
+                          </dt>
+                          <dd>{d.value || "—"}</dd>
+                        </div>
+                      ))}
+                  </dl>
+                </div>
+              )}
+
             {product.created_at && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">

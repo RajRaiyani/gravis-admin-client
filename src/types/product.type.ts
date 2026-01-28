@@ -16,6 +16,11 @@ export interface ProductCategory {
   description?: string;
 }
 
+export interface TechnicalDetail {
+  label: string;
+  value: string;
+}
+
 export interface Product {
   id: string;
   category_id: string;
@@ -23,6 +28,7 @@ export interface Product {
   description?: string;
   tags: string[];
   points: string[];
+  technical_details?: TechnicalDetail[];
   metadata: Record<string, any>;
   sale_price: number;
   sale_price_in_rupee?: number;
