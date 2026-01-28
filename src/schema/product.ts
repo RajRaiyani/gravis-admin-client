@@ -21,6 +21,14 @@ export const productFormSchema = z.object({
   points: z
     .array(z.string().trim().max(70, "Points must be less than 70 characters"))
     .default([]),
+  technical_details: z
+    .array(
+      z.object({
+        label: z.string(),
+        value: z.string(),
+      }),
+    )
+    .default([]),
   sale_price: z
     .number()
     .min(0, "Sale price must be greater than or equal to 0"),
