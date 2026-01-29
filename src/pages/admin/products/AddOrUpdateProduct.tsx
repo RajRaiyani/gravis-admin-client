@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useParams } from "react-router-dom";
@@ -9,11 +9,12 @@ import {
   useUpdateProduct,
 } from "@/hooks/useProducts";
 import { useGetProductCategories } from "@/hooks/useProductCategories";
-import { useProductImageUpload } from "@/hooks/useProductImageUpload";
-import { ImageCropper } from "@/components/shared/ImageCropper";
+import { ImageCropInput } from "@/components/shared/ImageCropInput";
+import { uploadFile } from "@/services/api/file";
+import { toast } from "react-hot-toast";
 import { TagsInput } from "@/components/shared/TagsInput";
 import type { Product } from "@/types/product.type";
-import { X, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -38,16 +39,6 @@ export default function AddOrUpdateProduct() {
   const { data: categoriesData } = useGetProductCategories();
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
-
-  const {
-    imagePreviews,
-    showCropper,
-    imageToCrop,
-    openCropper,
-    closeCropper,
-    handleCropComplete,
-    removePreview,
-  } = useProductImageUpload();
 
   // Extract product from response
   const product = productData
@@ -76,6 +67,7 @@ export default function AddOrUpdateProduct() {
       metadata: {},
       sale_price: 0,
       image_id: "",
+      imageFile: null,
     },
   });
 
@@ -128,36 +120,45 @@ export default function AddOrUpdateProduct() {
         metadata: product.metadata || {},
         sale_price: product.sale_price_in_rupee,
         image_id: imageId,
+        imageFile: null,
       });
     }
   }, [product, isEditing, form]);
 
-  // Cleanup preview URLs on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(imagePreviews).forEach((url) => {
-        URL.revokeObjectURL(url);
+  const onSubmit = async (data: ProductFormValues) => {
+    const existingImageId = data.image_id || "";
+    const imageFile = data.imageFile ?? null;
+
+    if (!imageFile && !existingImageId) {
+      form.setError("image_id", {
+        type: "manual",
+        message: "Product image is required",
       });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleFileSelect = (file: File) => {
-    // Remove old image preview if exists before opening cropper
-    const currentImageId = form.watch("image_id");
-    if (currentImageId) {
-      removePreview(currentImageId);
+      return;
     }
-    openCropper(file);
-  };
 
-  const handleImageUploadSuccess = (imageId: string) => {
-    // Set new image ID
-    form.setValue("image_id", imageId);
-  };
+    let imageId = existingImageId;
 
-  const onSubmit = (data: ProductFormValues) => {
-    // Schema has already transformed sale_price from rupees to paise
+    if (imageFile) {
+      try {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+        const response = await uploadFile(formData);
+        imageId = (response as { id?: string })?.id ?? "";
+        if (!imageId) {
+          toast.error("Failed to upload image");
+          return;
+        }
+      } catch (error: unknown) {
+        const message =
+          error && typeof error === "object" && "message" in error
+            ? String((error as { message: string }).message)
+            : "Failed to upload image";
+        toast.error(message);
+        return;
+      }
+    }
+
     const submitData = {
       category_id: data.category_id,
       name: data.name,
@@ -167,7 +168,7 @@ export default function AddOrUpdateProduct() {
       technical_details: data.technical_details || [],
       metadata: data.metadata || {},
       sale_price: data.sale_price,
-      image_id: data.image_id,
+      image_id: imageId,
     };
 
     if (isEditing && id) {
@@ -188,6 +189,10 @@ export default function AddOrUpdateProduct() {
     }
   };
 
+  const primaryImgUrl = useMemo(() => {
+    return product?.images?.find((img) => img.is_primary)?.image?.url;
+  }, [product]);
+
   if (isLoadingProduct && isEditing) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -200,20 +205,6 @@ export default function AddOrUpdateProduct() {
 
   return (
     <div className="space-y-6">
-      {showCropper && imageToCrop && (
-        <ImageCropper
-          image={imageToCrop}
-          onCropComplete={(blob) =>
-            handleCropComplete(blob, (imageId) =>
-              handleImageUploadSuccess(imageId),
-            )
-          }
-          onCancel={closeCropper}
-          aspect={1}
-          cropShape="rect"
-        />
-      )}
-
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">
           {isEditing ? "Edit Product" : "Add Product"}
@@ -230,6 +221,44 @@ export default function AddOrUpdateProduct() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="flex items-center gap-4">
+                <FormField
+                  control={form.control}
+                  name="image_id"
+                  render={() => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Product Image *</FormLabel>
+                      <FormControl>
+                        <FormField
+                          control={form.control}
+                          name="imageFile"
+                          render={({ field: fileField }) => (
+                            <ImageCropInput
+                              value={fileField.value ?? null}
+                              onChange={fileField.onChange}
+                              onBlur={fileField.onBlur}
+                              disabled={isPending}
+                              aspect={1}
+                              cropShape="rect"
+                              aria-label="Product image"
+                            />
+                          )}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {primaryImgUrl && (
+                  <div>
+                    <img
+                      className="size-48"
+                      src={primaryImgUrl}
+                      alt="Product image"
+                    />
+                  </div>
+                )}
+              </div>
               <FormField
                 control={form.control}
                 name="category_id"
@@ -332,7 +361,7 @@ export default function AddOrUpdateProduct() {
                         onBlur={field.onBlur}
                         placeholder="Type and press Enter to add tags"
                         maxTags={20}
-                        disabled={isPending || showCropper}
+                        disabled={isPending}
                       />
                     </FormControl>
                     <FormMessage />
@@ -353,7 +382,7 @@ export default function AddOrUpdateProduct() {
                         onBlur={field.onBlur}
                         placeholder="Type and press Enter to add points (max 70 characters each)"
                         maxLength={70}
-                        disabled={isPending || showCropper}
+                        disabled={isPending}
                       />
                     </FormControl>
                     <p className="text-sm text-muted-foreground">
@@ -390,7 +419,7 @@ export default function AddOrUpdateProduct() {
                                   };
                                   field.onChange(newDetails);
                                 }}
-                                disabled={isPending || showCropper}
+                                disabled={isPending}
                               />
                               <Input
                                 placeholder="Value (e.g., 2.5 kg, 10x5x3 cm)"
@@ -403,7 +432,7 @@ export default function AddOrUpdateProduct() {
                                   };
                                   field.onChange(newDetails);
                                 }}
-                                disabled={isPending || showCropper}
+                                disabled={isPending}
                               />
                             </div>
                             <Button
@@ -416,7 +445,7 @@ export default function AddOrUpdateProduct() {
                                 );
                                 field.onChange(newDetails);
                               }}
-                              disabled={isPending || showCropper}
+                              disabled={isPending}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -432,7 +461,7 @@ export default function AddOrUpdateProduct() {
                               { label: "", value: "" },
                             ]);
                           }}
-                          disabled={isPending || showCropper}
+                          disabled={isPending}
                         >
                           <Plus className="h-4 w-4 mr-2" />
                           Add Technical Detail
@@ -446,109 +475,6 @@ export default function AddOrUpdateProduct() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name="image_id"
-                render={({ field }) => {
-                  const imageId = field.value;
-                  const imageUrl = imageId
-                    ? imagePreviews[imageId] ||
-                      product?.images?.find((img) => img.image_id === imageId)
-                        ?.image?.url
-                    : null;
-
-                  return (
-                    <FormItem>
-                      <FormLabel>Product Image *</FormLabel>
-                      <FormControl>
-                        <div className="space-y-4">
-                          {imageUrl ? (
-                            <div className="space-y-2">
-                              <div className="relative inline-block">
-                                <div className="relative w-48 h-48 border-2 rounded-md overflow-hidden bg-muted">
-                                  <img
-                                    src={imageUrl}
-                                    alt="Product image"
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      const target =
-                                        e.target as HTMLImageElement;
-                                      target.style.display = "none";
-                                    }}
-                                  />
-                                </div>
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="sm"
-                                  className="absolute top-2 right-2"
-                                  onClick={() => {
-                                    if (imageId) {
-                                      removePreview(imageId);
-                                    }
-                                    field.onChange("");
-                                  }}
-                                  disabled={isPending || showCropper}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                              <label>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      handleFileSelect(file);
-                                    }
-                                    e.target.value = "";
-                                  }}
-                                  disabled={isPending || showCropper}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  asChild
-                                  disabled={isPending || showCropper}
-                                >
-                                  <span>Replace Image</span>
-                                </Button>
-                              </label>
-                            </div>
-                          ) : (
-                            <label className="flex w-48 h-48 border-2 border-dashed rounded-md overflow-hidden cursor-pointer hover:border-primary transition-colors">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    handleFileSelect(file);
-                                  }
-                                  e.target.value = "";
-                                }}
-                                disabled={isPending || showCropper}
-                              />
-                              <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                                <Plus className="h-8 w-8 text-muted-foreground" />
-                                <p className="text-xs text-muted-foreground text-center px-2">
-                                  Add Image
-                                </p>
-                              </div>
-                            </label>
-                          )}
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }}
               />
 
               <div className="flex gap-4">
