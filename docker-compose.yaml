@@ -1,0 +1,7 @@
+services:
+  gravis-admin-client:
+    image: rajraiyani/gravis-admin-client:latest
+    container_name: gravis-admin-client
+    pull_policy: always
+    ports:
+      - "5173:80"
