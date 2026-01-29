@@ -43,6 +43,7 @@ export default function AddOrUpdateProductCategory() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [croppedImageBlob, setCroppedImageBlob] = useState<Blob | null>(null);
 
   // Extract category from response (handle both { data: {...} } and {...} formats)
   const category = categoryData
@@ -73,6 +74,8 @@ export default function AddOrUpdateProductCategory() {
         // Fallback if image object is not available
         setImagePreview(null);
       }
+      // Clear any pending cropped blob when loading existing category
+      setCroppedImageBlob(null);
     }
   }, [category, isEditing, form]);
 
@@ -97,41 +100,15 @@ export default function AddOrUpdateProductCategory() {
     }
 
     setShowCropper(false);
-    setUploadingImage(true);
 
-    try {
-      // Convert blob to File (PNG format to preserve transparency)
-      const croppedFile = new File(
-        [croppedImageBlob],
-        `cropped-image-${Date.now()}.png`,
-        { type: "image/png" }
-      );
-
-      const formData = new FormData();
-      formData.append("file", croppedFile);
-
-      const response = await uploadFile(formData);
-      // Handle both response formats: { data: {...} } or {...}
-      const imageId = (response as any)?.id;
-
-      if (imageId) {
-        form.setValue("image_id", imageId);
-        // Create preview from cropped blob
-        const previewUrl = URL.createObjectURL(croppedImageBlob);
-        setImagePreview(previewUrl);
-        toast.success("Image cropped and uploaded successfully");
-      } else {
-        toast.error("Failed to upload image");
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        error && typeof error === "object" && "message" in error
-          ? String(error.message)
-          : "Failed to upload image";
-      toast.error(errorMessage);
-    } finally {
-      setUploadingImage(false);
-    }
+    // Store the cropped blob instead of uploading immediately
+    setCroppedImageBlob(croppedImageBlob);
+    
+    // Create preview from cropped blob
+    const previewUrl = URL.createObjectURL(croppedImageBlob);
+    setImagePreview(previewUrl);
+    
+    toast.success("Image cropped successfully. Click Save to upload.");
   };
 
   const handleCropCancel = () => {
@@ -142,18 +119,64 @@ export default function AddOrUpdateProductCategory() {
     }
   };
 
-  const onSubmit = (data: ProductCategoryFormValues) => {
+  const onSubmit = async (data: ProductCategoryFormValues) => {
+    // Check if we need to upload a new image first
+    if (croppedImageBlob) {
+      setUploadingImage(true);
+      
+      try {
+        // Convert blob to File (PNG format to preserve transparency)
+        const croppedFile = new File(
+          [croppedImageBlob],
+          `cropped-image-${Date.now()}.png`,
+          { type: "image/png" }
+        );
+
+        const formData = new FormData();
+        formData.append("file", croppedFile);
+
+        const response = await uploadFile(formData);
+        // Handle both response formats: { data: {...} } or {...}
+        const imageId = (response as any)?.id;
+
+        if (!imageId) {
+          toast.error("Failed to upload image");
+          setUploadingImage(false);
+          return;
+        }
+        
+        // Update data with the new image_id
+        data.image_id = imageId;
+        toast.success("Image uploaded successfully");
+      } catch (error: unknown) {
+        const errorMessage =
+          error && typeof error === "object" && "message" in error
+            ? String(error.message)
+            : "Failed to upload image";
+        toast.error(errorMessage);
+        setUploadingImage(false);
+        return;
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+
     // Ensure description is a string (not undefined) for backend validation
     const submitData = {
       ...data,
       description: data.description || "",
     };
 
+    // Now proceed with create or update
     if (isEditing && id) {
       updateCategory(
         { id, data: submitData },
         {
           onSuccess: () => {
+            // Clean up blob URL
+            if (imagePreview && croppedImageBlob) {
+              URL.revokeObjectURL(imagePreview);
+            }
             navigate("/product-categories");
           },
         }
@@ -161,6 +184,10 @@ export default function AddOrUpdateProductCategory() {
     } else {
       createCategory(submitData, {
         onSuccess: () => {
+          // Clean up blob URL
+          if (imagePreview && croppedImageBlob) {
+            URL.revokeObjectURL(imagePreview);
+          }
           navigate("/product-categories");
         },
       });
@@ -308,6 +335,8 @@ export default function AddOrUpdateProductCategory() {
                     ? isEditing
                       ? "Updating..."
                       : "Creating..."
+                    : uploadingImage
+                    ? "Uploading image..."
                     : isEditing
                     ? "Update Category"
                     : "Create Category"}
