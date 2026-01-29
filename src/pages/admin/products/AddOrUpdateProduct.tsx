@@ -13,7 +13,7 @@ import { useProductImageUpload } from "@/hooks/useProductImageUpload";
 import { ImageCropper } from "@/components/shared/ImageCropper";
 import { TagsInput } from "@/components/shared/TagsInput";
 import type { Product } from "@/types/product.type";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Trash2 } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -72,6 +72,7 @@ export default function AddOrUpdateProduct() {
       description: "",
       tags: [],
       points: [],
+      technical_details: [],
       metadata: {},
       sale_price: 0,
       image_id: "",
@@ -96,6 +97,22 @@ export default function AddOrUpdateProduct() {
           )
         : [];
 
+      // Ensure technical_details is always an array
+      const technicalDetails = Array.isArray(product.technical_details)
+        ? product.technical_details
+            .filter(
+              (detail: any) =>
+                detail &&
+                typeof detail === "object" &&
+                detail.label &&
+                detail.value,
+            )
+            .map((detail: any) => ({
+              label: String(detail.label),
+              value: String(detail.value),
+            }))
+        : [];
+
       // Get primary image ID (backend now uses single image)
       const primaryImage = product.images?.find((img) => img.is_primary);
       const imageId =
@@ -107,6 +124,7 @@ export default function AddOrUpdateProduct() {
         description: product.description || "",
         tags: tags,
         points: points,
+        technical_details: technicalDetails,
         metadata: product.metadata || {},
         sale_price: product.sale_price_in_rupee,
         image_id: imageId,
@@ -146,6 +164,7 @@ export default function AddOrUpdateProduct() {
       description: data.description || "",
       tags: data.tags || [],
       points: data.points || [],
+      technical_details: data.technical_details || [],
       metadata: data.metadata || {},
       sale_price: data.sale_price,
       image_id: data.image_id,
@@ -340,6 +359,89 @@ export default function AddOrUpdateProduct() {
                     <p className="text-sm text-muted-foreground">
                       Add key points about the product (max 70 characters per
                       point)
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="technical_details"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Technical Details</FormLabel>
+                    <FormControl>
+                      <div className="space-y-3">
+                        {(field.value || []).map((detail, index) => (
+                          <div
+                            key={index}
+                            className="flex gap-2 items-start p-3 border rounded-md"
+                          >
+                            <div className="flex-1 space-y-2">
+                              <Input
+                                placeholder="Label (e.g., Weight, Dimensions)"
+                                value={detail.label}
+                                onChange={(e) => {
+                                  const newDetails = [...(field.value || [])];
+                                  newDetails[index] = {
+                                    ...newDetails[index],
+                                    label: e.target.value,
+                                  };
+                                  field.onChange(newDetails);
+                                }}
+                                disabled={isPending || showCropper}
+                              />
+                              <Input
+                                placeholder="Value (e.g., 2.5 kg, 10x5x3 cm)"
+                                value={detail.value}
+                                onChange={(e) => {
+                                  const newDetails = [...(field.value || [])];
+                                  newDetails[index] = {
+                                    ...newDetails[index],
+                                    value: e.target.value,
+                                  };
+                                  field.onChange(newDetails);
+                                }}
+                                disabled={isPending || showCropper}
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const newDetails = (field.value || []).filter(
+                                  (_, i) => i !== index,
+                                );
+                                field.onChange(newDetails);
+                              }}
+                              disabled={isPending || showCropper}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            field.onChange([
+                              ...(field.value || []),
+                              { label: "", value: "" },
+                            ]);
+                          }}
+                          disabled={isPending || showCropper}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Technical Detail
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <p className="text-sm text-muted-foreground">
+                      Add technical specifications like weight, dimensions,
+                      materials, etc.
                     </p>
                     <FormMessage />
                   </FormItem>
