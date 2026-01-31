@@ -12,7 +12,6 @@ import { useGetProductCategories } from "@/hooks/useProductCategories";
 import { ImageCropInput } from "@/components/shared/ImageCropInput";
 import { uploadFile } from "@/services/api/file";
 import { toast } from "react-hot-toast";
-import { TagsInput } from "@/components/shared/TagsInput";
 import type { Product } from "@/types/product.type";
 import { Plus, Trash2 } from "lucide-react";
 import {
@@ -159,21 +158,32 @@ export default function AddOrUpdateProduct() {
       }
     }
 
+    // Filter out empty tags and points before submission
+    const filteredTags = (data.tags || []).filter(
+      (tag) => tag && tag.trim().length > 0,
+    );
+    const filteredPoints = (data.points || []).filter(
+      (point) => point && point.trim().length > 0,
+    );
+
+    // Convert rupees to paisa (multiply by 100)
+    const salePriceInPaisa = Math.round((data.sale_price || 0) * 100);
+
     const submitData = {
       category_id: data.category_id,
       name: data.name,
       description: data.description || "",
-      tags: data.tags || [],
-      points: data.points || [],
+      tags: filteredTags,
+      points: filteredPoints,
       technical_details: data.technical_details || [],
       metadata: data.metadata || {},
-      sale_price: data.sale_price,
+      sale_price_in_paisa: salePriceInPaisa,
       image_id: imageId,
     };
 
     if (isEditing && id) {
       updateProduct(
-        { id, data: submitData },
+        { id, data: { ...submitData, sale_price: data.sale_price || 0 } },
         {
           onSuccess: () => {
             navigate("/products");
@@ -181,11 +191,14 @@ export default function AddOrUpdateProduct() {
         },
       );
     } else {
-      createProduct(submitData, {
-        onSuccess: () => {
-          navigate("/products");
-        },
-      });
+      createProduct(
+        { ...submitData, sale_price: data.sale_price || 0 },
+        {
+          onSuccess: () => {
+            navigate("/products");
+          },
+        }
+      );
     }
   };
 
@@ -348,42 +361,117 @@ export default function AddOrUpdateProduct() {
                 )}
               />
 
+              {/* Tags Section */}
               <FormField
                 control={form.control}
                 name="tags"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl>
-                      <TagsInput
-                        value={field.value || []}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        placeholder="Type and press Enter to add tags"
-                        maxTags={20}
+                    <div className="flex items-center justify-between mb-3">
+                      <FormLabel>Tags</FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          field.onChange([...(field.value || []), ""]);
+                        }}
                         disabled={isPending}
-                      />
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Tag
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <div className="space-y-2">
+                        {(field.value || []).map((tag, index) => (
+                          <div key={index} className="flex gap-2 items-center">
+                            <Input
+                              placeholder="Enter tag"
+                              value={tag}
+                              onChange={(e) => {
+                                const newTags = [...(field.value || [])];
+                                newTags[index] = e.target.value;
+                                field.onChange(newTags);
+                              }}
+                              disabled={isPending}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const newTags = (field.value || []).filter(
+                                  (_, i) => i !== index,
+                                );
+                                field.onChange(newTags);
+                              }}
+                              disabled={isPending}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Points Section */}
               <FormField
                 control={form.control}
                 name="points"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Points</FormLabel>
-                    <FormControl>
-                      <TagsInput
-                        value={field.value || []}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        placeholder="Type and press Enter to add points (max 70 characters each)"
-                        maxLength={70}
+                    <div className="flex items-center justify-between mb-3">
+                      <FormLabel>Points</FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          field.onChange([...(field.value || []), ""]);
+                        }}
                         disabled={isPending}
-                      />
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Point
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <div className="space-y-2">
+                        {(field.value || []).map((point, index) => (
+                          <div key={index} className="flex gap-2 items-center">
+                            <Input
+                              placeholder="Enter point (max 70 characters)"
+                              value={point}
+                              maxLength={70}
+                              onChange={(e) => {
+                                const newPoints = [...(field.value || [])];
+                                newPoints[index] = e.target.value;
+                                field.onChange(newPoints);
+                              }}
+                              disabled={isPending}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const newPoints = (field.value || []).filter(
+                                  (_, i) => i !== index,
+                                );
+                                field.onChange(newPoints);
+                              }}
+                              disabled={isPending}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     </FormControl>
                     <p className="text-sm text-muted-foreground">
                       Add key points about the product (max 70 characters per
@@ -394,47 +482,62 @@ export default function AddOrUpdateProduct() {
                 )}
               />
 
+              {/* Technical Details Section */}
               <FormField
                 control={form.control}
                 name="technical_details"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Technical Details</FormLabel>
+                    <div className="flex items-center justify-between mb-3">
+                      <FormLabel>Technical Details</FormLabel>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          field.onChange([
+                            ...(field.value || []),
+                            { label: "", value: "" },
+                          ]);
+                        }}
+                        disabled={isPending}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Technical Detail
+                      </Button>
+                    </div>
                     <FormControl>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {(field.value || []).map((detail, index) => (
-                          <div
-                            key={index}
-                            className="flex gap-2 items-start p-3 border rounded-md"
-                          >
-                            <div className="flex-1 space-y-2">
-                              <Input
-                                placeholder="Label (e.g., Weight, Dimensions)"
-                                value={detail.label}
-                                onChange={(e) => {
-                                  const newDetails = [...(field.value || [])];
-                                  newDetails[index] = {
-                                    ...newDetails[index],
-                                    label: e.target.value,
-                                  };
-                                  field.onChange(newDetails);
-                                }}
-                                disabled={isPending}
-                              />
-                              <Input
-                                placeholder="Value (e.g., 2.5 kg, 10x5x3 cm)"
-                                value={detail.value}
-                                onChange={(e) => {
-                                  const newDetails = [...(field.value || [])];
-                                  newDetails[index] = {
-                                    ...newDetails[index],
-                                    value: e.target.value,
-                                  };
-                                  field.onChange(newDetails);
-                                }}
-                                disabled={isPending}
-                              />
-                            </div>
+                          <div key={index} className="flex gap-2 items-center">
+                            <Input
+                              placeholder="Label (e.g., Weight, Dimensions)"
+                              value={detail.label}
+                              onChange={(e) => {
+                                const newDetails = [...(field.value || [])];
+                                newDetails[index] = {
+                                  ...newDetails[index],
+                                  label: e.target.value,
+                                };
+                                field.onChange(newDetails);
+                              }}
+                              disabled={isPending}
+                              className="flex-1"
+                            />
+                            <Input
+                              placeholder="Value (e.g., 2.5 kg, 10x5x3 cm)"
+                              value={detail.value}
+                              onChange={(e) => {
+                                const newDetails = [...(field.value || [])];
+                                newDetails[index] = {
+                                  ...newDetails[index],
+                                  value: e.target.value,
+                                };
+                                field.onChange(newDetails);
+                              }}
+                              disabled={isPending}
+                              className="flex-1"
+                            />
                             <Button
                               type="button"
                               variant="ghost"
@@ -451,21 +554,6 @@ export default function AddOrUpdateProduct() {
                             </Button>
                           </div>
                         ))}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            field.onChange([
-                              ...(field.value || []),
-                              { label: "", value: "" },
-                            ]);
-                          }}
-                          disabled={isPending}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Technical Detail
-                        </Button>
                       </div>
                     </FormControl>
                     <p className="text-sm text-muted-foreground">
