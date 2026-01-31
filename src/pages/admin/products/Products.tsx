@@ -43,8 +43,8 @@ export default function Products() {
     ? data
     : [];
 
-  const formatPrice = (price: number) => {
-    return `₹${(price / 100).toFixed(2)}`;
+  const formatPrice = (priceInRupees: number) => {
+    return `₹${Number(priceInRupees).toFixed(2)}`;
   };
 
   const getPrimaryImage = (product: Product) => {
@@ -135,7 +135,7 @@ export default function Products() {
                   )}
                   <div className="flex items-center justify-between mt-4">
                     <span className="text-lg font-semibold">
-                      {formatPrice(product.sale_price)}
+                      {formatPrice(product.sale_price_in_rupee ?? product.sale_price)}
                     </span>
                     {product.tags && product.tags.length > 0 && (
                       <div className="flex gap-1 flex-wrap">

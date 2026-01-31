@@ -2,6 +2,15 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Edit, Trash2, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   useGetProduct,
   useDeleteProduct,
@@ -50,8 +59,8 @@ export default function ProductDetails() {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return `₹${(price / 100).toFixed(2)}`;
+  const formatPrice = (priceInRupees: number) => {
+    return `₹${Number(priceInRupees).toFixed(2)}`;
   };
 
   const getPrimaryImage = () => {
@@ -232,9 +241,9 @@ export default function ProductDetails() {
                       (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
-                  <span className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                  <Badge className="absolute top-2 right-2 bg-yellow-500 hover:bg-yellow-600">
                     Primary
-                  </span>
+                  </Badge>
                 </div>
               </div>
             )}
@@ -332,7 +341,7 @@ export default function ProductDetails() {
                 Sale Price
               </p>
               <p className="text-2xl font-bold">
-                {formatPrice(product.sale_price)}
+                {formatPrice(product.sale_price_in_rupee ?? product.sale_price)}
               </p>
             </div>
 
@@ -354,12 +363,9 @@ export default function ProductDetails() {
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {product.tags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-1 bg-muted rounded text-sm"
-                    >
+                    <Badge key={idx} variant="outline" className="text-sm py-1.5 px-3">
                       {tag}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -368,19 +374,15 @@ export default function ProductDetails() {
             {product.points && product.points.length > 0 && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Points
+                  Key Points
                 </p>
-                <ul className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {product.points.map((point, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-2 text-base"
-                    >
-                      <span className="text-primary mt-1">•</span>
-                      <span>{point}</span>
-                    </li>
+                    <Badge key={idx} variant="outline" className="text-sm py-1.5 px-3">
+                      {point}
+                    </Badge>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
 
@@ -389,26 +391,31 @@ export default function ProductDetails() {
               product.technical_details.length > 0 && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Technical Details
+                    Technical Specifications
                   </p>
-                  <dl className="space-y-2">
-                    {product.technical_details
-                      .filter(
-                        (d: { label?: string; value?: string }) =>
-                          d && (d.label || d.value)
-                      )
-                      .map((d: { label?: string; value?: string }, idx: number) => (
-                        <div
-                          key={idx}
-                          className="flex flex-wrap gap-x-2 text-base"
-                        >
-                          <dt className="font-medium text-muted-foreground">
-                            {d.label || "—"}:
-                          </dt>
-                          <dd>{d.value || "—"}</dd>
-                        </div>
-                      ))}
-                  </dl>
+                  <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[40%]">Specification</TableHead>
+                          <TableHead>Value</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {product.technical_details
+                          .filter(
+                            (d: { label?: string; value?: string }) =>
+                              d && (d.label || d.value)
+                          )
+                          .map((d: { label?: string; value?: string }, idx: number) => (
+                            <TableRow key={idx}>
+                              <TableCell className="font-medium">
+                                {d.label || "—"}
+                              </TableCell>
+                              <TableCell>{d.value || "—"}</TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
                 </div>
               )}
 
