@@ -10,6 +10,7 @@ import AddOrUpdateProduct from "@/pages/admin/products/AddOrUpdateProduct";
 import ProductDetails from "@/pages/admin/products/ProductDetails";
 import Inquiries from "@/pages/admin/inquiries/Inquiries";
 import InquiryDetails from "@/pages/admin/inquiries/InquiryDetails";
+import { Toaster } from "react-hot-toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +67,7 @@ function App() {
     <>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <Toaster />
           <AppRoutes />
         </AuthProvider>
       </QueryClientProvider>
