@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGetProducts, useDeleteProduct } from "@/hooks/useProducts";
@@ -81,82 +81,82 @@ export default function Products() {
           {products.map((product: Product) => {
             const primaryImageUrl = getPrimaryImage(product);
             return (
-              <Card
-                key={product.id}
-                className="hover:shadow-md transition-shadow"
-              >
-                <CardHeader>
-                  {primaryImageUrl && (
-                    <div className="mb-4">
-                      <img
-                        src={primaryImageUrl}
-                        alt={product.name}
-                        className="w-full h-48 object-cover rounded-md"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    </div>
-                  )}
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="line-clamp-2">{product.name}</span>
-                    <div className="flex gap-2 ml-2">
-                      <Link to={`/products/${product.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Link to={`/products/${product.id}/edit`}>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(product.id)}
-                        disabled={isDeleting && deletingId === product.id}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {product.category && (
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Category: {product.category.name}
-                    </p>
-                  )}
-                  {product.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                      {product.description}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between mt-4">
-                    <span className="text-lg font-semibold">
-                      {formatPrice(product.sale_price_in_rupee ?? product.sale_price)}
-                    </span>
-                    {product.tags && product.tags.length > 0 && (
-                      <div className="flex gap-1 flex-wrap">
-                        {product.tags.slice(0, 2).map((tag, idx) => (
-                          <span
-                            key={idx}
-                            className="text-xs bg-muted px-2 py-1 rounded"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {product.tags.length > 2 && (
-                          <span className="text-xs text-muted-foreground">
-                            +{product.tags.length - 2}
-                          </span>
-                        )}
+              <Link to={`/products/${product.id}`}>
+                <Card
+                  key={product.id}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <CardHeader>
+                    {primaryImageUrl && (
+                      <div className="mb-4">
+                        <img
+                          src={primaryImageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover rounded-md"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
+                          }}
+                        />
                       </div>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="line-clamp-2">{product.name}</span>
+                      <div className="flex gap-2 ml-2">
+                        <Link to={`/products/${product.id}/edit`}>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(product.id)}
+                          disabled={isDeleting && deletingId === product.id}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {product.category && (
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Category: {product.category.name}
+                      </p>
+                    )}
+                    {product.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                        {product.description}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between mt-4">
+                      <span className="text-lg font-semibold">
+                        {formatPrice(
+                          product.sale_price_in_rupee ?? product.sale_price
+                        )}
+                      </span>
+                      {product.tags && product.tags.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                          {product.tags.slice(0, 2).map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className="text-xs bg-muted px-2 py-1 rounded"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {product.tags.length > 2 && (
+                            <span className="text-xs text-muted-foreground">
+                              +{product.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>

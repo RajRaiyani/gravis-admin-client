@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import { AxiosError } from "axios";
 import {
   listProducts,
   getProduct,
@@ -46,11 +47,8 @@ export function useCreateProduct() {
       queryClient.invalidateQueries({ queryKey: keys.lists() });
       toast.success("Product created successfully");
     },
-    onError: (error: unknown) => {
-      const errorMessage =
-        error && typeof error === "object" && "message" in error
-          ? String(error.message)
-          : "Failed to create product";
+    onError: (error: AxiosError | { message: string }) => {
+      const errorMessage = error?.message || "Failed to create product";
       toast.error(errorMessage);
     },
   });

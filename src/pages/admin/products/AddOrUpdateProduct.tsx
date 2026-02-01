@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { productFormSchema, type ProductFormValues } from "@/schema/product";
@@ -33,7 +33,7 @@ export default function AddOrUpdateProduct() {
   const isEditing = !!id;
 
   const { data: productData, isLoading: isLoadingProduct } = useGetProduct(
-    id || "",
+    id || ""
   );
   const { data: categoriesData } = useGetProductCategories();
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
@@ -45,13 +45,17 @@ export default function AddOrUpdateProduct() {
       (productData as unknown as Product | undefined)
     : undefined;
 
+  const existingImageId = useMemo(() => {
+    return product?.images?.find((img) => img.is_primary)?.image?.id || "";
+  }, [product]);
+
   // Extract categories from response
   const categories = categoriesData
     ? Array.isArray((categoriesData as any)?.data)
       ? (categoriesData as any).data
       : Array.isArray(categoriesData)
-        ? categoriesData
-        : []
+      ? categoriesData
+      : []
     : [];
 
   const form = useForm<ProductFormValues>({
@@ -65,9 +69,23 @@ export default function AddOrUpdateProduct() {
       technical_details: [],
       metadata: {},
       sale_price: 0,
-      image_id: "",
       imageFile: null,
     },
+  });
+
+  const tagsFieldArray = useFieldArray({
+    control: form.control,
+    name: "tags",
+  });
+
+  const pointsFieldArray = useFieldArray({
+    control: form.control,
+    name: "points",
+  });
+
+  const technicalDetailsFieldArray = useFieldArray({
+    control: form.control,
+    name: "technical_details",
   });
 
   // Load product data when editing
@@ -76,7 +94,7 @@ export default function AddOrUpdateProduct() {
       // Ensure tags is always an array
       const tags = Array.isArray(product.tags)
         ? product.tags.filter(
-            (tag) => tag && typeof tag === "string" && tag.trim().length > 0,
+            (tag) => tag && typeof tag === "string" && tag.trim().length > 0
           )
         : [];
 
@@ -84,7 +102,7 @@ export default function AddOrUpdateProduct() {
       const points = Array.isArray(product.points)
         ? product.points.filter(
             (point) =>
-              point && typeof point === "string" && point.trim().length > 0,
+              point && typeof point === "string" && point.trim().length > 0
           )
         : [];
 
@@ -96,7 +114,7 @@ export default function AddOrUpdateProduct() {
                 detail &&
                 typeof detail === "object" &&
                 detail.label &&
-                detail.value,
+                detail.value
             )
             .map((detail: any) => ({
               label: String(detail.label),
@@ -104,32 +122,25 @@ export default function AddOrUpdateProduct() {
             }))
         : [];
 
-      // Get primary image ID (backend now uses single image)
-      const primaryImage = product.images?.find((img) => img.is_primary);
-      const imageId =
-        primaryImage?.image_id || product.images?.[0]?.image_id || "";
-
       form.reset({
         category_id: product.category_id || "",
         name: product.name || "",
         description: product.description || "",
-        tags: tags,
-        points: points,
+        tags: tags.map((t) => ({ value: t })),
+        points: points.map((p) => ({ value: p })),
         technical_details: technicalDetails,
         metadata: product.metadata || {},
         sale_price: product.sale_price_in_rupee,
-        image_id: imageId,
         imageFile: null,
       });
     }
   }, [product, isEditing, form]);
 
   const onSubmit = async (data: ProductFormValues) => {
-    const existingImageId = data.image_id || "";
     const imageFile = data.imageFile ?? null;
 
     if (!imageFile && !existingImageId) {
-      form.setError("image_id", {
+      form.setError("imageFile", {
         type: "manual",
         message: "Product image is required",
       });
@@ -158,16 +169,13 @@ export default function AddOrUpdateProduct() {
       }
     }
 
-    // Filter out empty tags and points before submission
-    const filteredTags = (data.tags || []).filter(
-      (tag) => tag && tag.trim().length > 0,
-    );
-    const filteredPoints = (data.points || []).filter(
-      (point) => point && point.trim().length > 0,
-    );
-
-    // Convert rupees to paisa (multiply by 100)
-    const salePriceInPaisa = Math.round((data.sale_price || 0) * 100);
+    // Map field array values to API shape (string[] for tags/points)
+    const filteredTags = (data.tags || [])
+      .map((t) => t.value?.trim())
+      .filter((v) => v && v.length > 0);
+    const filteredPoints = (data.points || [])
+      .map((p) => p.value?.trim())
+      .filter((v) => v && v.length > 0);
 
     const submitData = {
       category_id: data.category_id,
@@ -177,22 +185,22 @@ export default function AddOrUpdateProduct() {
       points: filteredPoints,
       technical_details: data.technical_details || [],
       metadata: data.metadata || {},
-      sale_price_in_paisa: salePriceInPaisa,
+      sale_price: data.sale_price,
       image_id: imageId,
     };
 
     if (isEditing && id) {
       updateProduct(
-        { id, data: { ...submitData, sale_price: data.sale_price || 0 } },
+        { id, data: submitData },
         {
           onSuccess: () => {
             navigate("/products");
           },
-        },
+        }
       );
     } else {
       createProduct(
-        { ...submitData, sale_price: data.sale_price || 0 },
+        { ...submitData },
         {
           onSuccess: () => {
             navigate("/products");
@@ -237,7 +245,7 @@ export default function AddOrUpdateProduct() {
               <div className="flex items-center gap-4">
                 <FormField
                   control={form.control}
-                  name="image_id"
+                  name="imageFile"
                   render={() => (
                     <FormItem className="flex-1">
                       <FormLabel>Product Image *</FormLabel>
@@ -362,208 +370,173 @@ export default function AddOrUpdateProduct() {
               />
 
               {/* Tags Section */}
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between mb-3">
-                      <FormLabel>Tags</FormLabel>
+              <div className="space-y-2">
+                <FormLabel>Tags</FormLabel>
+
+                <div className="space-y-2">
+                  {tagsFieldArray.fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2 items-center">
+                      <FormField
+                        control={form.control}
+                        name={`tags.${index}.value`}
+                        render={({ field: inputField }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input
+                                placeholder="Enter tag"
+                                {...inputField}
+                                disabled={isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <Button
                         type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          field.onChange([...(field.value || []), ""]);
-                        }}
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => tagsFieldArray.remove(index)}
                         disabled={isPending}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Tag
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
-                    <FormControl>
-                      <div className="space-y-2">
-                        {(field.value || []).map((tag, index) => (
-                          <div key={index} className="flex gap-2 items-center">
-                            <Input
-                              placeholder="Enter tag"
-                              value={tag}
-                              onChange={(e) => {
-                                const newTags = [...(field.value || [])];
-                                newTags[index] = e.target.value;
-                                field.onChange(newTags);
-                              }}
-                              disabled={isPending}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                const newTags = (field.value || []).filter(
-                                  (_, i) => i !== index,
-                                );
-                                field.onChange(newTags);
-                              }}
-                              disabled={isPending}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => tagsFieldArray.append({ value: "" })}
+                  disabled={isPending}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Tag
+                </Button>
+              </div>
 
               {/* Points Section */}
-              <FormField
-                control={form.control}
-                name="points"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between mb-3">
-                      <FormLabel>Points</FormLabel>
+              <div className="space-y-2">
+                <FormLabel>Points</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Add key points about the product (max 70 characters per point)
+                </p>
+                <div className="space-y-2">
+                  {pointsFieldArray.fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2 items-center">
+                      <FormField
+                        control={form.control}
+                        name={`points.${index}.value`}
+                        render={({ field: inputField }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input
+                                placeholder="Enter point (max 70 characters)"
+                                {...inputField}
+                                maxLength={70}
+                                disabled={isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <Button
                         type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          field.onChange([...(field.value || []), ""]);
-                        }}
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => pointsFieldArray.remove(index)}
                         disabled={isPending}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Point
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
-                    <FormControl>
-                      <div className="space-y-2">
-                        {(field.value || []).map((point, index) => (
-                          <div key={index} className="flex gap-2 items-center">
-                            <Input
-                              placeholder="Enter point (max 70 characters)"
-                              value={point}
-                              maxLength={70}
-                              onChange={(e) => {
-                                const newPoints = [...(field.value || [])];
-                                newPoints[index] = e.target.value;
-                                field.onChange(newPoints);
-                              }}
-                              disabled={isPending}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                const newPoints = (field.value || []).filter(
-                                  (_, i) => i !== index,
-                                );
-                                field.onChange(newPoints);
-                              }}
-                              disabled={isPending}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </FormControl>
-                    <p className="text-sm text-muted-foreground">
-                      Add key points about the product (max 70 characters per
-                      point)
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => pointsFieldArray.append({ value: "" })}
+                  disabled={isPending}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Point
+                </Button>
+              </div>
 
               {/* Technical Details Section */}
-              <FormField
-                control={form.control}
-                name="technical_details"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between mb-3">
-                      <FormLabel>Technical Details</FormLabel>
+              <div className="space-y-2">
+                <FormLabel>Technical Details</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Add technical specifications like weight, dimensions,
+                  materials, etc.
+                </p>
+                <div className="space-y-2">
+                  {technicalDetailsFieldArray.fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2 items-center">
+                      <FormField
+                        control={form.control}
+                        name={`technical_details.${index}.label`}
+                        render={({ field: labelField }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input
+                                placeholder="Label (e.g., Weight, Dimensions)"
+                                {...labelField}
+                                disabled={isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`technical_details.${index}.value`}
+                        render={({ field: valueField }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input
+                                placeholder="Value (e.g., 2.5 kg, 10x5x3 cm)"
+                                {...valueField}
+                                disabled={isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <Button
                         type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          field.onChange([
-                            ...(field.value || []),
-                            { label: "", value: "" },
-                          ]);
-                        }}
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => technicalDetailsFieldArray.remove(index)}
                         disabled={isPending}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Technical Detail
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
-                    <FormControl>
-                      <div className="space-y-2">
-                        {(field.value || []).map((detail, index) => (
-                          <div key={index} className="flex gap-2 items-center">
-                            <Input
-                              placeholder="Label (e.g., Weight, Dimensions)"
-                              value={detail.label}
-                              onChange={(e) => {
-                                const newDetails = [...(field.value || [])];
-                                newDetails[index] = {
-                                  ...newDetails[index],
-                                  label: e.target.value,
-                                };
-                                field.onChange(newDetails);
-                              }}
-                              disabled={isPending}
-                              className="flex-1"
-                            />
-                            <Input
-                              placeholder="Value (e.g., 2.5 kg, 10x5x3 cm)"
-                              value={detail.value}
-                              onChange={(e) => {
-                                const newDetails = [...(field.value || [])];
-                                newDetails[index] = {
-                                  ...newDetails[index],
-                                  value: e.target.value,
-                                };
-                                field.onChange(newDetails);
-                              }}
-                              disabled={isPending}
-                              className="flex-1"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                const newDetails = (field.value || []).filter(
-                                  (_, i) => i !== index,
-                                );
-                                field.onChange(newDetails);
-                              }}
-                              disabled={isPending}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </FormControl>
-                    <p className="text-sm text-muted-foreground">
-                      Add technical specifications like weight, dimensions,
-                      materials, etc.
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  ))}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    technicalDetailsFieldArray.append({
+                      label: "",
+                      value: "",
+                    })
+                  }
+                  disabled={isPending}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Technical Detail
+                </Button>
+              </div>
 
               <div className="flex gap-4">
                 <Button type="submit" disabled={isPending}>
@@ -572,8 +545,8 @@ export default function AddOrUpdateProduct() {
                       ? "Updating..."
                       : "Creating..."
                     : isEditing
-                      ? "Update Product"
-                      : "Create Product"}
+                    ? "Update Product"
+                    : "Create Product"}
                 </Button>
                 <Button
                   type="button"

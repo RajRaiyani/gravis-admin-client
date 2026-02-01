@@ -14,12 +14,19 @@ export const productFormSchema = z.object({
     .max(2000, "Description must be less than 2000 characters")
     .optional(),
   tags: z
-    .array(z.string())
+    .array(z.object({ value: z.string() }))
     .max(20, "Maximum 20 tags allowed")
     .default([]),
   metadata: z.object({}).default({}),
   points: z
-    .array(z.string().trim().max(70, "Points must be less than 70 characters"))
+    .array(
+      z.object({
+        value: z
+          .string()
+          .trim()
+          .max(70, "Points must be less than 70 characters"),
+      }),
+    )
     .default([]),
   technical_details: z
     .array(
@@ -32,10 +39,6 @@ export const productFormSchema = z.object({
   sale_price: z
     .number()
     .min(0, "Sale price must be greater than or equal to 0"),
-  image_id: z
-    .string()
-    .uuid({ version: "v7", message: "Invalid image ID" })
-    .optional(),
   imageFile: z.instanceof(File).nullable().optional(),
 });
 
