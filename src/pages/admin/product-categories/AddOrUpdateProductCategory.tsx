@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useParams } from "react-router-dom";
@@ -13,8 +13,8 @@ import {
   useUpdateProductCategory,
 } from "@/hooks/useProductCategories";
 import { uploadFile } from "@/services/api/file";
+import { ImageCropInput } from "@/components/shared/ImageCropInput";
 import type { ProductCategory } from "@/types/product-category.type";
-import { ImageCropper } from "@/components/shared/ImageCropper";
 import {
   Form,
   FormControl,
@@ -39,12 +39,7 @@ export default function AddOrUpdateProductCategory() {
     useCreateProductCategory();
   const { mutate: updateCategory, isPending: isUpdating } =
     useUpdateProductCategory();
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [showCropper, setShowCropper] = useState(false);
-  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
 
-  // Extract category from response (handle both { data: {...} } and {...} formats)
   const category = categoryData
     ? (categoryData as unknown as { data?: ProductCategory })?.data ||
       (categoryData as unknown as ProductCategory | undefined)
@@ -55,98 +50,58 @@ export default function AddOrUpdateProductCategory() {
     defaultValues: {
       name: "",
       description: "",
-      image_id: "",
+      imageFile: null,
     },
   });
 
-  // Load category data when editing
   useEffect(() => {
     if (category && isEditing) {
       form.reset({
         name: category.name || "",
         description: category.description || "",
-        image_id: category.image_id || "",
+        imageFile: null,
       });
-      if (category.image?.url) {
-        setImagePreview(category.image.url);
-      } else if (category.image_id) {
-        // Fallback if image object is not available
-        setImagePreview(null);
-      }
     }
   }, [category, isEditing, form]);
 
-  const handleFileSelect = (file: File) => {
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file");
+  const onSubmit = async (data: ProductCategoryFormValues) => {
+    const existingImageId = category?.image?.id || "";
+    const imageFile = data.imageFile ?? null;
+
+    if (!imageFile && !existingImageId) {
+      form.setError("imageFile", {
+        type: "manual",
+        message: "Category image is required",
+      });
       return;
     }
 
-    // Create object URL for the cropper
-    const imageUrl = URL.createObjectURL(file);
-    setImageToCrop(imageUrl);
-    setShowCropper(true);
-  };
+    let imageId = existingImageId;
 
-  const handleCropComplete = async (croppedImageBlob: Blob) => {
-    // Clean up object URL first
-    if (imageToCrop) {
-      URL.revokeObjectURL(imageToCrop);
-      setImageToCrop(null);
-    }
-
-    setShowCropper(false);
-    setUploadingImage(true);
-
-    try {
-      // Convert blob to File (PNG format to preserve transparency)
-      const croppedFile = new File(
-        [croppedImageBlob],
-        `cropped-image-${Date.now()}.png`,
-        { type: "image/png" }
-      );
-
-      const formData = new FormData();
-      formData.append("file", croppedFile);
-
-      const response = await uploadFile(formData);
-      // Handle both response formats: { data: {...} } or {...}
-      const imageId = (response as any)?.id;
-
-      if (imageId) {
-        form.setValue("image_id", imageId);
-        // Create preview from cropped blob
-        const previewUrl = URL.createObjectURL(croppedImageBlob);
-        setImagePreview(previewUrl);
-        toast.success("Image cropped and uploaded successfully");
-      } else {
-        toast.error("Failed to upload image");
+    if (imageFile) {
+      try {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+        const response = await uploadFile(formData);
+        imageId = (response as { id?: string })?.id ?? "";
+        if (!imageId) {
+          toast.error("Failed to upload image");
+          return;
+        }
+      } catch (error: unknown) {
+        const message =
+          error && typeof error === "object" && "message" in error
+            ? String((error as { message: string }).message)
+            : "Failed to upload image";
+        toast.error(message);
+        return;
       }
-    } catch (error: unknown) {
-      const errorMessage =
-        error && typeof error === "object" && "message" in error
-          ? String(error.message)
-          : "Failed to upload image";
-      toast.error(errorMessage);
-    } finally {
-      setUploadingImage(false);
     }
-  };
 
-  const handleCropCancel = () => {
-    setShowCropper(false);
-    if (imageToCrop) {
-      URL.revokeObjectURL(imageToCrop);
-      setImageToCrop(null);
-    }
-  };
-
-  const onSubmit = (data: ProductCategoryFormValues) => {
-    // Ensure description is a string (not undefined) for backend validation
     const submitData = {
-      ...data,
+      name: data.name,
       description: data.description || "",
+      image_id: imageId,
     };
 
     if (isEditing && id) {
@@ -156,7 +111,7 @@ export default function AddOrUpdateProductCategory() {
           onSuccess: () => {
             navigate("/product-categories");
           },
-        }
+        },
       );
     } else {
       createCategory(submitData, {
@@ -179,16 +134,6 @@ export default function AddOrUpdateProductCategory() {
 
   return (
     <div className="space-y-6">
-      {showCropper && imageToCrop && (
-        <ImageCropper
-          image={imageToCrop}
-          onCropComplete={handleCropComplete}
-          onCancel={handleCropCancel}
-          aspect={1}
-          cropShape="rect"
-        />
-      )}
-
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">
           {isEditing ? "Edit Product Category" : "Add Product Category"}
@@ -245,72 +190,54 @@ export default function AddOrUpdateProductCategory() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="image_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image *</FormLabel>
-                    <FormControl>
-                      <div className="space-y-4">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleFileSelect(file);
-                            }
-                            // Reset input value to allow selecting the same file again
-                            e.target.value = "";
-                          }}
-                          disabled={uploadingImage || showCropper}
-                        />
-                        {imagePreview && (
-                          <div className="mt-4">
-                            <p className="text-sm text-muted-foreground mb-2">
-                              Cropped Image Preview (Square)
-                            </p>
-                            <div className="w-48 h-48 mx-auto">
-                              <img
-                                src={imagePreview}
-                                alt="Preview"
-                                className="w-full h-full object-cover rounded-md border"
-                              />
-                            </div>
-                          </div>
-                        )}
-                        {field.value &&
-                          !imagePreview &&
-                          category?.image?.url && (
-                            <div className="mt-4">
-                              <img
-                                src={category.image.url}
-                                alt="Current"
-                                className="w-full h-48 object-cover rounded-md border"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display =
-                                    "none";
-                                }}
-                              />
-                            </div>
+              <div className="flex items-center gap-4">
+                <FormField
+                  control={form.control}
+                  name="imageFile"
+                  render={() => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Image *</FormLabel>
+                      <FormControl>
+                        <FormField
+                          control={form.control}
+                          name="imageFile"
+                          render={({ field: fileField }) => (
+                            <ImageCropInput
+                              value={fileField.value ?? null}
+                              onChange={fileField.onChange}
+                              onBlur={fileField.onBlur}
+                              disabled={isPending}
+                              aspect={1}
+                              cropShape="rect"
+                              aria-label="Category image"
+                            />
                           )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {category?.image?.url && (
+                  <div>
+                    <img
+                      className="size-48"
+                      src={category.image.url}
+                      alt="Category image"
+                    />
+                  </div>
                 )}
-              />
+              </div>
 
               <div className="flex gap-4">
-                <Button type="submit" disabled={isPending || uploadingImage}>
+                <Button type="submit" disabled={isPending}>
                   {isPending
                     ? isEditing
                       ? "Updating..."
                       : "Creating..."
                     : isEditing
-                    ? "Update Category"
-                    : "Create Category"}
+                      ? "Update Category"
+                      : "Create Category"}
                 </Button>
                 <Button
                   type="button"

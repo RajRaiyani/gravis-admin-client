@@ -32,7 +32,11 @@ export const productFormSchema = z.object({
   sale_price: z
     .number()
     .min(0, "Sale price must be greater than or equal to 0"),
-  image_id: z.uuid({ version: "v7", message: "Invalid image ID" }),
+  image_id: z
+    .string()
+    .uuid({ version: "v7", message: "Invalid image ID" })
+    .optional(),
+  imageFile: z.instanceof(File).nullable().optional(),
 });
 
 // Use z.input to get the type before transformation (for form values)

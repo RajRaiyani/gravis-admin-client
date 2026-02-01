@@ -12,7 +12,7 @@ export const productCategoryFormSchema = z.object({
     .trim()
     .max(500, "Description must be less than 500 characters")
     .optional(),
-  image_id: z.string().uuid({ message: "Invalid image ID" }),
+  imageFile: z.instanceof(File).nullable().optional(),
 });
 
 export type ProductCategoryFormValues = z.infer<typeof productCategoryFormSchema>;
