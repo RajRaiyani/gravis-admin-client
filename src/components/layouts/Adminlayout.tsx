@@ -17,6 +17,7 @@ import {
   Store,
   Tags,
   MessageSquare,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +30,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { label: "Products", path: "/products", icon: Package },
   { label: "Orders", path: "/orders", icon: ShoppingCart },
-  // { label: "Customers", path: "/customers", icon: Users },
+  { label: "Customers", path: "/customers", icon: Users },
   // { label: "Categories", path: "/categories", icon: FolderTree },
   { label: "Product Categories", path: "/product-categories", icon: Tags },
   { label: "Inquiries", path: "/inquiries", icon: MessageSquare },

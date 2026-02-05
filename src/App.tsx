@@ -10,6 +10,8 @@ import AddOrUpdateProduct from "@/pages/admin/products/AddOrUpdateProduct";
 import ProductDetails from "@/pages/admin/products/ProductDetails";
 import Inquiries from "@/pages/admin/inquiries/Inquiries";
 import InquiryDetails from "@/pages/admin/inquiries/InquiryDetails";
+import Customers from "@/pages/admin/customers/Customers";
+import CustomerDetails from "@/pages/admin/customers/CustomerDetails"; // Add this import
 import { Toaster } from "react-hot-toast";
 
 const queryClient = new QueryClient({
@@ -49,14 +51,17 @@ function AppRoutes() {
           <Route path="inquiries" element={<Inquiries />} />
           <Route path="inquiries/:id" element={<InquiryDetails />} />
 
+          {/* Customers Routes */}
+          <Route path="customers" element={<Customers />} />
+          <Route path="customers/:id" element={<CustomerDetails />} /> {/* Add this line */}
+
           {/* Other Routes */}
           <Route path="orders" element={<h1>Orders</h1>} />
-          <Route path="customers" element={<h1>Customers</h1>} />
           <Route path="categories" element={<h1>Categories</h1>} />
           <Route path="analytics" element={<h1>Analytics</h1>} />
           <Route path="settings" element={<h1>Settings</h1>} />
         </Route>
-        <Route path="/" element={<Navigate to="" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
