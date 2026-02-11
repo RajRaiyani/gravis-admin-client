@@ -13,6 +13,8 @@ import {
 import { toast } from "react-hot-toast";
 import useDebounce from "@/hooks/useDebounce";
 
+type InquiryTypeFilter = "general" | "contact" | "product" | "all";
+
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
   in_progress: "bg-blue-100 text-blue-800",
@@ -24,12 +26,14 @@ export default function Inquiries() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<InquiryTypeFilter>("all");
   const [offset, setOffset] = useState(0);
   const limit = 20;
 
   const { data, isLoading, error } = useInquiries({
     offset,
     limit,
+    type: typeFilter !== "all" ? typeFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
     search: debouncedSearchTerm || undefined,
   });
@@ -136,6 +140,22 @@ export default function Inquiries() {
                 <option value="closed">Closed</option>
               </select>
             </div>
+            <div className="relative w-full sm:w-[180px]">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <select
+                value={typeFilter}
+                onChange={(e) => {
+                  setTypeFilter(e.target.value as InquiryTypeFilter);
+                  setOffset(0);
+                }}
+                className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="all">All Types</option>
+                <option value="general">General</option>
+                <option value="contact">Contact</option>
+                <option value="product">Product</option>
+              </select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -168,7 +188,7 @@ export default function Inquiries() {
                           {inquiry.name}
                         </CardTitle>
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          className={`px-2 py-1 -mx-4 rounded-full text-xs font-medium ${
                             statusColors[inquiry.status] || statusColors.pending
                           }`}
                         >
@@ -189,11 +209,11 @@ export default function Inquiries() {
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
-                      <Link to={`/inquiries/${inquiry.id}`}>
+                      {/* <Link to={`/inquiries/${inquiry.id}`}>
                         <Button variant="ghost" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
-                      </Link>
+                      </Link> */}
                       <Button
                         variant="ghost"
                         size="sm"

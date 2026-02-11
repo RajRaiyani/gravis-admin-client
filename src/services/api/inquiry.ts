@@ -4,6 +4,7 @@ import Http from "./httpRequest"
 export function listInquiries(params?: {
   offset?: number;
   limit?: number;
+  type?: "general" | "contact" | "product";
   status?: string;
   search?: string;
 }) {

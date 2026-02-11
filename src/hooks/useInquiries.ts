@@ -38,6 +38,7 @@ interface ApiError {
 export function useInquiries(params?: {
   offset?: number;
   limit?: number;
+  type?: 'general' | 'contact' | 'product';
   status?: string;
   search?: string;
 }) {
