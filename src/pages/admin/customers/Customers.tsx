@@ -39,8 +39,6 @@ export default function Customers() {
     page,
     limit,
     search: debouncedSearchTerm || undefined,
-    sort_by: sortBy,
-    sort_order: sortOrder,
   });
 
   const handleSort = (column: SortBy) => {
@@ -159,7 +157,9 @@ export default function Customers() {
           <CardContent className="py-12 text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {searchTerm ? "No customers found matching your search" : "No customers found"}
+              {searchTerm
+                ? "No customers found matching your search"
+                : "No customers found"}
             </p>
           </CardContent>
         </Card>
@@ -212,14 +212,19 @@ export default function Customers() {
                   {customers.map((customer: Customer) => (
                     <TableRow key={customer.id}>
                       <TableCell className="font-medium">
-                        {customer.full_name || `${customer.first_name} ${customer.last_name}`}
+                        {customer.full_name ||
+                          `${customer.first_name} ${customer.last_name}`}
                       </TableCell>
                       <TableCell>{customer.email}</TableCell>
                       <TableCell>{customer.phone_number || "-"}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Badge
-                            variant={customer.is_email_verified ? "default" : "secondary"}
+                            variant={
+                              customer.is_email_verified
+                                ? "default"
+                                : "secondary"
+                            }
                             className="text-xs"
                           >
                             {customer.is_email_verified ? "Email ✓" : "Email ✗"}

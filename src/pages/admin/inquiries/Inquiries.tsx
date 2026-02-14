@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Eye, Trash2, Search, Filter } from "lucide-react";
+import { Trash2, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -53,7 +52,7 @@ export default function Inquiries() {
         },
         onError: (error: any) => {
           toast.error(
-            error.response?.data?.error || "Failed to delete inquiry"
+            error.response?.data?.error || "Failed to delete inquiry",
           );
           setDeletingId(null);
         },
@@ -71,7 +70,7 @@ export default function Inquiries() {
         onError: (error: any) => {
           toast.error(error.response?.data?.error || "Failed to update status");
         },
-      }
+      },
     );
   };
 
