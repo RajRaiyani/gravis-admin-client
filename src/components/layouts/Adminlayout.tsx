@@ -18,6 +18,7 @@ import {
   Tags,
   MessageSquare,
   Users,
+  LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
+  { label: "Dashboard", path: "/", icon: LayoutDashboard },
   { label: "Products", path: "/products", icon: Package },
   { label: "Orders", path: "/orders", icon: ShoppingCart },
   { label: "Customers", path: "/customers", icon: Users },

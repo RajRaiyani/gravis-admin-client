@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/context/AuthContext";
 import Login from "@/pages/auth/Login";
 import AdminLayout from "@/components/layouts/Adminlayout";
+import Dashboard from "@/pages/admin/Dashboard";
 import ProductCategories from "@/pages/admin/product-categories/ProductCategories";
 import AddOrUpdateProductCategory from "@/pages/admin/product-categories/AddOrUpdateProductCategory";
 import Products from "@/pages/admin/products/Products";
@@ -28,7 +29,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<AdminLayout />}>
-          <Route index element={<h1>Dashboard</h1>} />
+          <Route index element={<Dashboard />} />
 
           {/* Product Categories Routes */}
           <Route path="product-categories" element={<ProductCategories />} />
