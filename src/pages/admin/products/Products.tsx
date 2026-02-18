@@ -1,15 +1,48 @@
 import { Link } from "react-router-dom";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGetProducts, useDeleteProduct } from "@/hooks/useProducts";
+import {
+  useGetProductsInfinite,
+  useDeleteProduct,
+} from "@/hooks/useProducts";
 import type { Product } from "@/types/product.type";
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 export default function Products() {
-  const { data, isLoading, error } = useGetProducts();
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetProductsInfinite();
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  );
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: "100px",
+      threshold: 0,
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
@@ -36,12 +69,9 @@ export default function Products() {
     );
   }
 
-  // Handle both response formats: { data: [...] } or [...]
-  const products = Array.isArray(data?.data)
-    ? data.data
-    : Array.isArray(data)
-    ? data
-    : [];
+  const products = (data?.pages ?? []).flatMap((page) =>
+    Array.isArray(page?.data) ? page.data : Array.isArray(page) ? page : []
+  );
 
   const formatPrice = (priceInRupees: number) => {
     return `₹${Number(priceInRupees).toFixed(2)}`;
@@ -161,6 +191,12 @@ export default function Products() {
           })}
         </div>
       )}
+
+      <div ref={loadMoreRef} className="flex justify-center py-8">
+        {isFetchingNextPage && (
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        )}
+      </div>
     </div>
   );
 }

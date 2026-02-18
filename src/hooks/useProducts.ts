@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { AxiosError } from "axios";
 import {
@@ -15,10 +20,14 @@ import type {
   ProductFilterParams,
 } from "@/types/product.type";
 
+const PRODUCTS_PAGE_SIZE = 20;
+
 export const keys = {
   all: ["products"] as const,
   lists: () => [...keys.all, "list"] as const,
   list: (params?: ProductFilterParams) => [...keys.lists(), params] as const,
+  infiniteList: (params?: Omit<ProductFilterParams, "offset" | "limit">) =>
+    [...keys.lists(), "infinite", params] as const,
   details: () => [...keys.all, "detail"] as const,
   detail: (id: string) => [...keys.details(), id] as const,
 };
@@ -27,6 +36,30 @@ export function useGetProducts(params?: ProductFilterParams) {
   return useQuery({
     queryKey: keys.list(params),
     queryFn: () => listProducts(params),
+  });
+}
+
+export function useGetProductsInfinite(
+  params?: Omit<ProductFilterParams, "offset" | "limit">
+) {
+  return useInfiniteQuery({
+    queryKey: keys.infiniteList(params),
+    queryFn: ({ pageParam }) =>
+      listProducts({
+        ...params,
+        offset: pageParam as number,
+        limit: PRODUCTS_PAGE_SIZE,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const list = Array.isArray(lastPage?.data)
+        ? lastPage.data
+        : Array.isArray(lastPage)
+          ? lastPage
+          : [];
+      if (list.length < PRODUCTS_PAGE_SIZE) return undefined;
+      return allPages.length * PRODUCTS_PAGE_SIZE;
+    },
   });
 }
 
