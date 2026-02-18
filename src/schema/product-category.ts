@@ -13,6 +13,7 @@ export const productCategoryFormSchema = z.object({
     .max(500, "Description must be less than 500 characters")
     .optional(),
   imageFile: z.instanceof(File).nullable().optional(),
+  bannerImageFile: z.instanceof(File).nullable().optional(),
 });
 
 export type ProductCategoryFormValues = z.infer<typeof productCategoryFormSchema>;

@@ -32,6 +32,9 @@ export interface Product {
   metadata: Record<string, any>;
   sale_price: number;
   sale_price_in_rupee?: number;
+  product_label?: string | null;
+  warranty_label?: string | null;
+  is_featured: boolean;
   created_at?: string;
   updated_at?: string;
   category?: ProductCategory;
@@ -47,6 +50,9 @@ export interface CreateProductData {
   metadata: Record<string, any>;
   sale_price: number;
   image_id: string;
+  product_label?: string;
+  warranty_label?: string;
+  is_featured?: boolean;
 }
 
 export interface UpdateProductData {
@@ -58,6 +64,9 @@ export interface UpdateProductData {
   metadata: Record<string, any>;
   sale_price: number;
   image_id: string;
+  product_label?: string;
+  warranty_label?: string;
+  is_featured?: boolean;
 }
 
 export interface ProductFilterParams {

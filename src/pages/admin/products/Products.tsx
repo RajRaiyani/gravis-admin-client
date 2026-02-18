@@ -114,11 +114,11 @@ export default function Products() {
               <Link to={`/products/${product.id}`}>
                 <Card
                   key={product.id}
-                  className="hover:shadow-md transition-shadow"
+                  className="hover:shadow-md transition-shadow relative"
                 >
                   <CardHeader>
                     {primaryImageUrl && (
-                      <div className="mb-4">
+                      <div className="mb-4 relative">
                         <img
                           src={primaryImageUrl}
                           alt={product.name}
@@ -128,6 +128,34 @@ export default function Products() {
                               "none";
                           }}
                         />
+                        {product.is_featured && (
+                          <div className="absolute top-2 right-2 bg-yellow-400 text-white px-2 py-1 rounded-full text-xs font-bold">
+                            ⭐ Featured
+                          </div>
+                        )}
+                        {product.product_label && (
+                          <div
+                            className={`absolute top-2 left-2 text-white px-2 py-1 rounded text-xs font-medium ${
+                              product.product_label === "New"
+                                ? "bg-blue-500"
+                                : product.product_label === "Best Seller"
+                                ? "bg-green-500"
+                                : product.product_label === "Hot Deal"
+                                ? "bg-red-500"
+                                : product.product_label === "Limited Edition"
+                                ? "bg-purple-500"
+                                : product.product_label === "Top Rated"
+                                ? "bg-yellow-500"
+                                : product.product_label === "Sale"
+                                ? "bg-orange-500"
+                                : product.product_label === "Exclusive"
+                                ? "bg-indigo-500"
+                                : "bg-gray-500"
+                            }`}
+                          >
+                            {product.product_label}
+                          </div>
+                        )}
                       </div>
                     )}
                     <CardTitle className="flex items-center justify-between">
@@ -159,6 +187,12 @@ export default function Products() {
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                         {product.description}
                       </p>
+                    )}
+                    {product.warranty_label && (
+                      <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
+                        <span>🛡️</span>
+                        <span>{product.warranty_label}</span>
+                      </div>
                     )}
                     <div className="flex items-center justify-between mt-4">
                       <span className="text-lg font-semibold">

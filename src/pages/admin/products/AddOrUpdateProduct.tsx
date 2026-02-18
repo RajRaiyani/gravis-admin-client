@@ -69,6 +69,9 @@ export default function AddOrUpdateProduct() {
       technical_details: [],
       metadata: {},
       sale_price: 0,
+      product_label: "",
+      warranty_label: "",
+      is_featured: false,
       imageFile: null,
     },
   });
@@ -131,6 +134,9 @@ export default function AddOrUpdateProduct() {
         technical_details: technicalDetails,
         metadata: product.metadata || {},
         sale_price: product.sale_price_in_rupee,
+        product_label: product.product_label || "",
+        warranty_label: product.warranty_label || "",
+        is_featured: product.is_featured || false,
         imageFile: null,
       });
     }
@@ -187,6 +193,9 @@ export default function AddOrUpdateProduct() {
       metadata: data.metadata || {},
       sale_price: data.sale_price,
       image_id: imageId,
+      product_label: data.product_label || undefined,
+      warranty_label: data.warranty_label || undefined,
+      is_featured: data.is_featured || false,
     };
 
     if (isEditing && id) {
@@ -242,44 +251,34 @@ export default function AddOrUpdateProduct() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="flex items-center gap-4">
-                <FormField
-                  control={form.control}
-                  name="imageFile"
-                  render={() => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Product Image *</FormLabel>
-                      <FormControl>
-                        <FormField
-                          control={form.control}
-                          name="imageFile"
-                          render={({ field: fileField }) => (
-                            <ImageCropInput
-                              value={fileField.value ?? null}
-                              onChange={fileField.onChange}
-                              onBlur={fileField.onBlur}
-                              disabled={isPending}
-                              aspect={1}
-                              cropShape="rect"
-                              aria-label="Product image"
-                            />
-                          )}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {primaryImgUrl && (
-                  <div>
-                    <img
-                      className="size-48"
-                      src={primaryImgUrl}
-                      alt="Product image"
-                    />
-                  </div>
+              <FormField
+                control={form.control}
+                name="imageFile"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Product Image *</FormLabel>
+                    <FormControl>
+                      <FormField
+                        control={form.control}
+                        name="imageFile"
+                        render={({ field: fileField }) => (
+                          <ImageCropInput
+                            value={fileField.value ?? null}
+                            onChange={fileField.onChange}
+                            onBlur={fileField.onBlur}
+                            disabled={isPending}
+                            aspect={1}
+                            cropShape="rect"
+                            existingPreviewUrl={primaryImgUrl ?? null}
+                            aria-label="Product image"
+                          />
+                        )}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
+              />
               <FormField
                 control={form.control}
                 name="category_id"
@@ -364,6 +363,100 @@ export default function AddOrUpdateProduct() {
                         ? `₹${(field.value as number).toFixed(2)}`
                         : ""}
                     </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="product_label"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Label (Optional)</FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                      >
+                        <option value="">None</option>
+                        <option value="New">New</option>
+                        <option value="Best Seller">Best Seller</option>
+                        <option value="Hot Deal">Hot Deal</option>
+                        <option value="Limited Edition">Limited Edition</option>
+                        <option value="Top Rated">Top Rated</option>
+                        <option value="Sale">Sale</option>
+                        <option value="Exclusive">Exclusive</option>
+                      </select>
+                    </FormControl>
+                    <p className="text-sm text-muted-foreground">
+                      Badge to display on product card
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="warranty_label"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Warranty (Optional)</FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                      >
+                        <option value="">No Warranty</option>
+                        <option value="3 Months Warranty">3 Months Warranty</option>
+                        <option value="6 Months Warranty">6 Months Warranty</option>
+                        <option value="9 Months Warranty">9 Months Warranty</option>
+                        <option value="1 Year Warranty">1 Year Warranty</option>
+                        <option value="1.5 Years Warranty">1.5 Years Warranty</option>
+                        <option value="2 Years Warranty">2 Years Warranty</option>
+                        <option value="3 Years Warranty">3 Years Warranty</option>
+                        <option value="5 Years Warranty">5 Years Warranty</option>
+                        <option value="Lifetime Warranty">Lifetime Warranty</option>
+                      </select>
+                    </FormControl>
+                    <p className="text-sm text-muted-foreground">
+                      Warranty period for this product
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="is_featured"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-start gap-4 rounded-lg border border-input p-4 bg-muted/30">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          id="is_featured"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          disabled={isPending}
+                          className="mt-1 h-5 w-5 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500 focus:ring-2 cursor-pointer"
+                        />
+                      </FormControl>
+                      <label htmlFor="is_featured" className="cursor-pointer flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xl">⭐</span>
+                          <span className="font-semibold text-base">
+                            Mark as Featured Product
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Featured products are highlighted on homepage and get
+                          priority in search results
+                        </p>
+                      </label>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

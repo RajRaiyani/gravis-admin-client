@@ -1,7 +1,15 @@
 import { Link } from "react-router-dom";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   useGetProductCategories,
   useDeleteProductCategory,
@@ -71,54 +79,89 @@ export default function ProductCategories() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category: ProductCategory) => (
-            <Card
-              key={category.id}
-              className="hover:shadow-md transition-shadow"
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>{category.name}</span>
-                  <div className="flex gap-2">
-                    <Link to={`/product-categories/${category.id}/edit`}>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(category.id)}
-                      disabled={isDeleting && deletingId === category.id}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {category.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {category.description}
-                  </p>
-                )}
-                {category.image?.url && (
-                  <div className="mt-4 w-full flex justify-center">
-                    <img
-                      src={category.image.url}
-                      alt={category.name}
-                      className="size-56 object-cover rounded-md"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[200px]">Category Image</TableHead>
+                  <TableHead className="w-[250px]">Banner Image</TableHead>
+                  <TableHead>Category Info</TableHead>
+                  <TableHead className="w-[120px] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {categories.map((category: ProductCategory) => (
+                  <TableRow key={category.id}>
+                    <TableCell>
+                      {category.image?.url ? (
+                        <img
+                          src={category.image.url}
+                          alt={category.name}
+                          className="w-32 h-32 object-cover rounded-md border"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-32 h-32 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">
+                          No Image
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {category.banner_image?.url ? (
+                        <img
+                          src={category.banner_image.url}
+                          alt={`${category.name} banner`}
+                          className="w-48 h-24 object-cover rounded-md border"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-48 h-24 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">
+                          No Banner
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <p className="font-semibold text-base">
+                          {category.name}
+                        </p>
+                        {category.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {category.description}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Link to={`/product-categories/${category.id}/edit`}>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(category.id)}
+                          disabled={isDeleting && deletingId === category.id}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -118,14 +118,24 @@ export function ImageCropInput({
         {previewUrl ? (
           <div className="relative w-full flex flex-col gap-2">
             <div
-              className="relative w-48 h-48 border-2 rounded-md bg-muted shrink-0"
+              className={cn(
+                "relative border-2 rounded-md bg-muted shrink-0",
+                aspect === 1 && "w-48 h-48",
+                aspect === 2 && "w-96 h-48",
+                aspect !== 1 && aspect !== 2 && "w-48"
+              )}
+              style={
+                aspect !== 1 && aspect !== 2
+                  ? { aspectRatio: aspect.toString() }
+                  : undefined
+              }
               role="img"
               aria-label={ariaLabel ?? "Image preview"}
             >
               <img
                 src={previewUrl}
                 alt="Preview"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover rounded-md"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.style.display = "none";

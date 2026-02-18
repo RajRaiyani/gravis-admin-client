@@ -322,6 +322,37 @@ export default function ProductDetails() {
             <CardTitle>Product Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex gap-2 mb-4">
+              {product.is_featured && (
+                <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+                  ⭐ Featured
+                </Badge>
+              )}
+              {product.product_label && (
+                <Badge
+                  className={
+                    product.product_label === "New"
+                      ? "bg-blue-100 text-blue-800"
+                      : product.product_label === "Best Seller"
+                      ? "bg-green-100 text-green-800"
+                      : product.product_label === "Hot Deal"
+                      ? "bg-red-100 text-red-800"
+                      : product.product_label === "Limited Edition"
+                      ? "bg-purple-100 text-purple-800"
+                      : product.product_label === "Top Rated"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : product.product_label === "Sale"
+                      ? "bg-orange-100 text-orange-800"
+                      : product.product_label === "Exclusive"
+                      ? "bg-indigo-100 text-indigo-800"
+                      : "bg-gray-100 text-gray-800"
+                  }
+                >
+                  {product.product_label}
+                </Badge>
+              )}
+            </div>
+
             <div>
               <p className="text-sm font-medium text-muted-foreground">Name</p>
               <p className="text-lg">{product.name}</p>
@@ -355,6 +386,42 @@ export default function ProductDetails() {
                 </p>
               </div>
             )}
+
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Product Label
+              </p>
+              <p className="text-base">{product.product_label || "None"}</p>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Warranty
+              </p>
+              <p className="text-base">
+                {product.warranty_label ? (
+                  <span className="flex items-center gap-1">
+                    <span>🛡️</span>
+                    <span>{product.warranty_label}</span>
+                  </span>
+                ) : (
+                  "No warranty info"
+                )}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Featured Status
+              </p>
+              <p
+                className={
+                  product.is_featured ? "text-green-600" : "text-gray-500"
+                }
+              >
+                {product.is_featured ? "✓ Featured Product" : "Not Featured"}
+              </p>
+            </div>
 
             {product.tags && product.tags.length > 0 && (
               <div>

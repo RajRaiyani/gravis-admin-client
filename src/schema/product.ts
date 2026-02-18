@@ -39,6 +39,15 @@ export const productFormSchema = z.object({
   sale_price: z
     .number()
     .min(0, "Sale price must be greater than or equal to 0"),
+  product_label: z
+    .string()
+    .max(100, "Product label must be less than 100 characters")
+    .optional(),
+  warranty_label: z
+    .string()
+    .max(255, "Warranty label must be less than 255 characters")
+    .optional(),
+  is_featured: z.boolean().default(false),
   imageFile: z.instanceof(File).nullable().optional(),
 });
 
