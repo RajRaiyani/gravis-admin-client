@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import type { ProductCategory } from "@/types/product-category.type";
 import { useState } from "react";
 
 export default function ProductCategories() {
+  const navigate = useNavigate();
   const { data, isLoading, error } = useGetProductCategories();
   const { mutate: deleteCategory, isPending: isDeleting } =
     useDeleteProductCategory();
@@ -49,11 +50,12 @@ export default function ProductCategories() {
   }
 
   // Handle both response formats: { data: [...] } or [...]
-  const categories = Array.isArray(data?.data)
-    ? data.data
-    : Array.isArray(data)
-    ? data
-    : [];
+  const categories =
+    data && Array.isArray(data.data)
+      ? data.data
+      : Array.isArray(data)
+        ? data
+        : [];
 
   return (
     <div className="space-y-6">
@@ -92,7 +94,11 @@ export default function ProductCategories() {
               </TableHeader>
               <TableBody>
                 {categories.map((category: ProductCategory) => (
-                  <TableRow key={category.id}>
+                  <TableRow
+                    key={category.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/product-categories/${category.id}`)}
+                  >
                     <TableCell>
                       {category.image?.url ? (
                         <img
@@ -139,7 +145,10 @@ export default function ProductCategories() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell
+                      className="text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex gap-2 justify-end">
                         <Link to={`/product-categories/${category.id}/edit`}>
                           <Button variant="ghost" size="sm">

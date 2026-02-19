@@ -6,6 +6,7 @@ import AdminLayout from "@/components/layouts/Adminlayout";
 import Dashboard from "@/pages/admin/Dashboard";
 import ProductCategories from "@/pages/admin/product-categories/ProductCategories";
 import AddOrUpdateProductCategory from "@/pages/admin/product-categories/AddOrUpdateProductCategory";
+import CategoryDetails from "@/pages/admin/product-categories/CategoryDetails";
 import Products from "@/pages/admin/products/Products";
 import AddOrUpdateProduct from "@/pages/admin/products/AddOrUpdateProduct";
 import ProductDetails from "@/pages/admin/products/ProductDetails";
@@ -40,6 +41,10 @@ function AppRoutes() {
           <Route
             path="product-categories/:id/edit"
             element={<AddOrUpdateProductCategory />}
+          />
+          <Route
+            path="product-categories/:id"
+            element={<CategoryDetails />}
           />
 
           {/* Products Routes */}
