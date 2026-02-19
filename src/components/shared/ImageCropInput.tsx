@@ -122,10 +122,11 @@ export function ImageCropInput({
                 "relative border-2 rounded-md bg-muted shrink-0",
                 aspect === 1 && "w-48 h-48",
                 aspect === 2 && "w-96 h-48",
-                aspect !== 1 && aspect !== 2 && "w-48"
+                aspect === 5 / 2 && "w-60 h-24",
+                aspect !== 1 && aspect !== 2 && aspect !== 5 / 2 && "w-48"
               )}
               style={
-                aspect !== 1 && aspect !== 2
+                aspect !== 1 && aspect !== 2 && aspect !== 5 / 2
                   ? { aspectRatio: aspect.toString() }
                   : undefined
               }

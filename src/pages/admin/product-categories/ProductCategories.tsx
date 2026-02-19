@@ -115,7 +115,7 @@ export default function ProductCategories() {
                         <img
                           src={category.banner_image.url}
                           alt={`${category.name} banner`}
-                          className="w-48 h-24 object-cover rounded-md border"
+                          className="w-60 h-24 object-cover rounded-md border"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display =
                               "none";

@@ -261,7 +261,7 @@ export default function AddOrUpdateProductCategory() {
                             onChange={fileField.onChange}
                             onBlur={fileField.onBlur}
                             disabled={isPending}
-                            aspect={2}
+                            aspect={5 / 2}
                             cropShape="rect"
                             existingPreviewUrl={
                               category?.banner_image?.url ?? null
@@ -273,7 +273,7 @@ export default function AddOrUpdateProductCategory() {
                     </FormControl>
                     <p className="text-sm text-muted-foreground mt-2">
                       Large banner for category page header (Recommended:
-                      1920x960px or 2:1 ratio)
+                      1920x768px or 5:2 ratio)
                     </p>
                     <FormMessage />
                   </FormItem>
