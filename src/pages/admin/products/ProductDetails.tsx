@@ -321,8 +321,9 @@ export default function ProductDetails() {
           <CardHeader>
             <CardTitle>Product Details</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2 mb-4">
+          <CardContent className="space-y-6">
+            {/* Status chips */}
+            <div className="flex flex-wrap gap-2">
               {product.is_featured && (
                 <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
                   ⭐ Featured
@@ -353,187 +354,269 @@ export default function ProductDetails() {
               )}
             </div>
 
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
-              <p className="text-lg">{product.name}</p>
-            </div>
+            {/* Core info */}
+            <section className="space-y-4">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Overview
+              </h2>
+              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase">
+                    Name
+                  </dt>
+                  <dd className="text-sm md:text-base font-medium">
+                    {product.name}
+                  </dd>
+                </div>
 
-            {product.category && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Category
-                </p>
-                <p className="text-lg">{product.category.name}</p>
-              </div>
-            )}
+                {product.category && (
+                  <div className="space-y-1">
+                    <dt className="text-xs font-medium text-muted-foreground uppercase">
+                      Category
+                    </dt>
+                    <dd className="text-sm md:text-base">
+                      {product.category.name}
+                    </dd>
+                  </div>
+                )}
 
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Sale Price
-              </p>
-              <p className="text-2xl font-bold">
-                {formatPrice(product.sale_price_in_rupee ?? product.sale_price)}
-              </p>
-            </div>
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase">
+                    Sale Price
+                  </dt>
+                  <dd className="text-xl md:text-2xl font-semibold">
+                    {formatPrice(
+                      product.sale_price_in_rupee ?? product.sale_price
+                    )}
+                  </dd>
+                </div>
 
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase">
+                    Product Label
+                  </dt>
+                  <dd className="text-sm md:text-base">
+                    {product.product_label || "None"}
+                  </dd>
+                </div>
+
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase">
+                    Warranty
+                  </dt>
+                  <dd className="text-sm md:text-base">
+                    {product.warranty_label ? (
+                      <span className="inline-flex items-center gap-1">
+                        <span>🛡️</span>
+                        <span>{product.warranty_label}</span>
+                      </span>
+                    ) : (
+                      "No warranty info"
+                    )}
+                  </dd>
+                </div>
+
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase">
+                    Featured Status
+                  </dt>
+                  <dd
+                    className={
+                      product.is_featured ? "text-green-600" : "text-gray-500"
+                    }
+                  >
+                    {product.is_featured ? "✓ Featured Product" : "Not Featured"}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+            {/* Description full width */}
             {product.description && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
+              <section className="border-t pt-4">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                   Description
-                </p>
-                <p className="text-base whitespace-pre-wrap">
+                </h2>
+                <p className="text-sm md:text-base whitespace-pre-wrap leading-relaxed text-muted-foreground">
                   {product.description}
                 </p>
-              </div>
+              </section>
             )}
 
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Product Label
-              </p>
-              <p className="text-base">{product.product_label || "None"}</p>
-            </div>
+            {/* Tags & key points */}
+            {(product.tags?.length ?? 0) > 0 || (product.points?.length ?? 0) > 0 ? (
+              <section className="border-t pt-4 space-y-4">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Highlights
+                </h2>
 
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Warranty
-              </p>
-              <p className="text-base">
-                {product.warranty_label ? (
-                  <span className="flex items-center gap-1">
-                    <span>🛡️</span>
-                    <span>{product.warranty_label}</span>
-                  </span>
-                ) : (
-                  "No warranty info"
+                {product.tags && product.tags.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase">
+                      Tags
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {product.tags.map((tag, idx) => (
+                        <Badge
+                          key={idx}
+                          variant="outline"
+                          className="text-xs md:text-sm py-1 px-2 md:py-1.5 md:px-3"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </p>
-            </div>
 
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Featured Status
-              </p>
-              <p
-                className={
-                  product.is_featured ? "text-green-600" : "text-gray-500"
-                }
-              >
-                {product.is_featured ? "✓ Featured Product" : "Not Featured"}
-              </p>
-            </div>
+                {product.points && product.points.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase">
+                      Key Points
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {product.points.map((point, idx) => (
+                        <Badge
+                          key={idx}
+                          variant="outline"
+                          className="text-xs md:text-sm py-1 px-2 md:py-1.5 md:px-3"
+                        >
+                          {point}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            ) : null}
 
-            {product.tags && product.tags.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Tags
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {product.tags.map((tag, idx) => (
-                    <Badge key={idx} variant="outline" className="text-sm py-1.5 px-3">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {product.points && product.points.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Key Points
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {product.points.map((point, idx) => (
-                    <Badge key={idx} variant="outline" className="text-sm py-1.5 px-3">
-                      {point}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
+            {/* Technical details */}
             {product.technical_details &&
               Array.isArray(product.technical_details) &&
               product.technical_details.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                <section className="border-t pt-4 space-y-2">
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Technical Specifications
-                  </p>
+                  </h2>
                   <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[40%]">Specification</TableHead>
-                          <TableHead>Value</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {product.technical_details
-                          .filter(
-                            (d: { label?: string; value?: string }) =>
-                              d && (d.label || d.value)
-                          )
-                          .map((d: { label?: string; value?: string }, idx: number) => (
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[40%]">
+                          Specification
+                        </TableHead>
+                        <TableHead>Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {product.technical_details
+                        .filter(
+                          (d: { label?: string; value?: string }) =>
+                            d && (d.label || d.value)
+                        )
+                        .map(
+                          (
+                            d: { label?: string; value?: string },
+                            idx: number
+                          ) => (
                             <TableRow key={idx}>
                               <TableCell className="font-medium">
                                 {d.label || "—"}
                               </TableCell>
                               <TableCell>{d.value || "—"}</TableCell>
                             </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
-                </div>
-              )}
-
-            {product.filter_options &&
-              product.filter_options.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Attributes
-                  </p>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[40%]">Filter</TableHead>
-                        <TableHead>Value</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {product.filter_options.map((fo) => (
-                        <TableRow key={fo.filter_option_id}>
-                          <TableCell className="font-medium">
-                            {fo.filter_name || "—"}
-                          </TableCell>
-                          <TableCell>{fo.value || "—"}</TableCell>
-                        </TableRow>
-                      ))}
+                          )
+                        )}
                     </TableBody>
                   </Table>
-                </div>
+                </section>
               )}
 
-            {product.created_at && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Created At
-                </p>
-                <p className="text-base">
-                  {new Date(product.created_at).toLocaleString()}
-                </p>
-              </div>
+            {/* Filter attributes */}
+            {product.filter_options && product.filter_options.length > 0 && (
+              <section className="border-t pt-4 space-y-2">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Attributes
+                </h2>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[40%]">Filter</TableHead>
+                      <TableHead>Value</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {product.filter_options.map((fo) => (
+                      <TableRow key={fo.filter_option_id}>
+                        <TableCell className="font-medium">
+                          {fo.filter_name || "—"}
+                        </TableCell>
+                        <TableCell>{fo.value || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </section>
             )}
 
-            {product.updated_at && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Updated At
-                </p>
-                <p className="text-base">
-                  {new Date(product.updated_at).toLocaleString()}
-                </p>
-              </div>
-            )}
+            {/* System & metadata info */}
+            <section className="border-t pt-4 space-y-4">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                System Information
+              </h2>
+
+              <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase">
+                    Product ID
+                  </dt>
+                  <dd className="text-xs md:text-sm font-mono break-all">
+                    {product.id}
+                  </dd>
+                </div>
+
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium text-muted-foreground uppercase">
+                    Category ID
+                  </dt>
+                  <dd className="text-xs md:text-sm font-mono break-all">
+                    {product.category_id}
+                  </dd>
+                </div>
+
+                {product.created_at && (
+                  <div className="space-y-1">
+                    <dt className="text-xs font-medium text-muted-foreground uppercase">
+                      Created At
+                    </dt>
+                    <dd className="text-xs md:text-sm">
+                      {new Date(product.created_at).toLocaleString()}
+                    </dd>
+                  </div>
+                )}
+
+                {product.updated_at && (
+                  <div className="space-y-1">
+                    <dt className="text-xs font-medium text-muted-foreground uppercase">
+                      Updated At
+                    </dt>
+                    <dd className="text-xs md:text-sm">
+                      {new Date(product.updated_at).toLocaleString()}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+
+              {product.metadata && Object.keys(product.metadata).length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase">
+                    Metadata
+                  </p>
+                  <pre className="bg-muted rounded-md p-3 text-xs md:text-sm font-mono whitespace-pre-wrap break-all max-h-64 overflow-auto">
+                    {JSON.stringify(product.metadata, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </section>
           </CardContent>
         </Card>
       </div>

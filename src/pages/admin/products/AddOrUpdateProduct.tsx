@@ -292,525 +292,610 @@ export default function AddOrUpdateProduct() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="imageFile"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Product Image *</FormLabel>
-                    <FormControl>
-                      <FormField
-                        control={form.control}
-                        name="imageFile"
-                        render={({ field: fileField }) => (
-                          <ImageCropInput
-                            value={fileField.value ?? null}
-                            onChange={fileField.onChange}
-                            onBlur={fileField.onBlur}
-                            disabled={isPending}
-                            aspect={1}
-                            cropShape="rect"
-                            existingPreviewUrl={primaryImgUrl ?? null}
-                            aria-label="Product image"
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-8"
+            >
+              {/* Media & basic info */}
+              <section className="space-y-4">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Basic Details
+                </h2>
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.2fr)] gap-6">
+                  <FormField
+                    control={form.control}
+                    name="imageFile"
+                    render={() => (
+                      <FormItem className="flex flex-col gap-2">
+                        <FormLabel>Product Image *</FormLabel>
+                        <FormControl>
+                          <FormField
+                            control={form.control}
+                            name="imageFile"
+                            render={({ field: fileField }) => (
+                              <div className="space-y-2">
+                                <ImageCropInput
+                                  value={fileField.value ?? null}
+                                  onChange={fileField.onChange}
+                                  onBlur={fileField.onBlur}
+                                  disabled={isPending}
+                                  aspect={1}
+                                  cropShape="rect"
+                                  existingPreviewUrl={primaryImgUrl ?? null}
+                                  aria-label="Product image"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                  Recommended: square image, at least 800×800px.
+                                </p>
+                              </div>
+                            )}
                           />
-                        )}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category *</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                      >
-                        <option value="">Select a category</option>
-                        {categories.map((cat: any) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter product name"
-                        autoFocus
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter product description"
-                        rows={4}
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="sale_price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sale Price (in ₹) *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="Enter price in rupees (e.g., 100.00)"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || 0)
-                        }
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <p className="text-sm text-muted-foreground">
-                      {field.value
-                        ? `₹${(field.value as number).toFixed(2)}`
-                        : ""}
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="product_label"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product Label (Optional)</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                      >
-                        <option value="">None</option>
-                        <option value="New">New</option>
-                        <option value="Best Seller">Best Seller</option>
-                        <option value="Hot Deal">Hot Deal</option>
-                        <option value="Limited Edition">Limited Edition</option>
-                        <option value="Top Rated">Top Rated</option>
-                        <option value="Sale">Sale</option>
-                        <option value="Exclusive">Exclusive</option>
-                      </select>
-                    </FormControl>
-                    <p className="text-sm text-muted-foreground">
-                      Badge to display on product card
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="warranty_label"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Warranty (Optional)</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                      >
-                        <option value="">No Warranty</option>
-                        <option value="3 Months Warranty">3 Months Warranty</option>
-                        <option value="6 Months Warranty">6 Months Warranty</option>
-                        <option value="9 Months Warranty">9 Months Warranty</option>
-                        <option value="1 Year Warranty">1 Year Warranty</option>
-                        <option value="1.5 Years Warranty">1.5 Years Warranty</option>
-                        <option value="2 Years Warranty">2 Years Warranty</option>
-                        <option value="3 Years Warranty">3 Years Warranty</option>
-                        <option value="5 Years Warranty">5 Years Warranty</option>
-                        <option value="Lifetime Warranty">Lifetime Warranty</option>
-                      </select>
-                    </FormControl>
-                    <p className="text-sm text-muted-foreground">
-                      Warranty period for this product
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="is_featured"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-start gap-4 rounded-lg border border-input p-4 bg-muted/30">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          id="is_featured"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          disabled={isPending}
-                          className="mt-1 h-5 w-5 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500 focus:ring-2 cursor-pointer"
-                        />
-                      </FormControl>
-                      <label htmlFor="is_featured" className="cursor-pointer flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xl">⭐</span>
-                          <span className="font-semibold text-base">
-                            Mark as Featured Product
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Featured products are highlighted on homepage and get
-                          priority in search results
-                        </p>
-                      </label>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Tags Section */}
-              <div className="space-y-2">
-                <FormLabel>Tags</FormLabel>
-
-                <div className="space-y-2">
-                  {tagsFieldArray.fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2 items-center">
-                      <FormField
-                        control={form.control}
-                        name={`tags.${index}.value`}
-                        render={({ field: inputField }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                placeholder="Enter tag"
-                                {...inputField}
-                                disabled={isPending}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => tagsFieldArray.remove(index)}
-                        disabled={isPending}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => tagsFieldArray.append({ value: "" })}
-                  disabled={isPending}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Tag
-                </Button>
-              </div>
-
-              {/* Points Section */}
-              <div className="space-y-2">
-                <FormLabel>Points</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Add key points about the product (max 70 characters per point)
-                </p>
-                <div className="space-y-2">
-                  {pointsFieldArray.fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2 items-center">
-                      <FormField
-                        control={form.control}
-                        name={`points.${index}.value`}
-                        render={({ field: inputField }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                placeholder="Enter point (max 70 characters)"
-                                {...inputField}
-                                maxLength={70}
-                                disabled={isPending}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => pointsFieldArray.remove(index)}
-                        disabled={isPending}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => pointsFieldArray.append({ value: "" })}
-                  disabled={isPending}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Point
-                </Button>
-              </div>
-
-              {/* Technical Details Section */}
-              <div className="space-y-2">
-                <FormLabel>Technical Details</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Add technical specifications like weight, dimensions,
-                  materials, etc.
-                </p>
-                <div className="space-y-2">
-                  {technicalDetailsFieldArray.fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2 items-center">
-                      <FormField
-                        control={form.control}
-                        name={`technical_details.${index}.label`}
-                        render={({ field: labelField }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                placeholder="Label (e.g., Weight, Dimensions)"
-                                {...labelField}
-                                disabled={isPending}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`technical_details.${index}.value`}
-                        render={({ field: valueField }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                placeholder="Value (e.g., 2.5 kg, 10x5x3 cm)"
-                                {...valueField}
-                                disabled={isPending}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => technicalDetailsFieldArray.remove(index)}
-                        disabled={isPending}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    technicalDetailsFieldArray.append({
-                      label: "",
-                      value: "",
-                    })
-                  }
-                  disabled={isPending}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Technical Detail
-                </Button>
-              </div>
-
-              {/* Attribute mapping (filter options by category) */}
-              <div className="space-y-2">
-                <FormLabel>Attribute mapping</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Map product to category filters. Select a category first, then
-                  add filter + option pairs. These appear as attributes on the
-                  product.
-                </p>
-                {!categoryId ? (
-                  <p className="text-sm text-muted-foreground italic">
-                    Select a category to load filters and options.
-                  </p>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      {((watchedAttributeMappings as { filter_id?: string; filter_option_id?: string }[]) || []).map(
-                        (row, index) => {
-                        const selectedFilterId = row?.filter_id || "";
-                        const selectedFilter = filters.find(
-                          (f) => f.id === selectedFilterId
-                        );
-                        const options = selectedFilter?.options ?? [];
-                        const field = attributeMappingsFieldArray.fields[index];
-                        if (!field) return null;
-                        return (
-                          <div
-                            key={field.id}
-                            className="flex gap-2 items-center flex-wrap"
-                          >
-                            <FormField
-                              control={form.control}
-                              name={`attribute_mappings.${index}.filter_id`}
-                              render={({ field: selectField }) => (
-                                <FormItem className="min-w-[160px]">
-                                  <FormControl>
-                                    <select
-                                      {...selectField}
-                                      onChange={(e) => {
-                                        selectField.onChange(e.target.value);
-                                        form.setValue(
-                                          `attribute_mappings.${index}.filter_option_id`,
-                                          ""
-                                        );
-                                      }}
-                                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                                      disabled={isPending}
-                                    >
-                                      <option value="">
-                                        Select filter
-                                      </option>
-                                      {filters.map((f) => (
-                                        <option key={f.id} value={f.id}>
-                                          {f.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name={`attribute_mappings.${index}.filter_option_id`}
-                              render={({ field: optionField }) => (
-                                <FormItem className="min-w-[160px]">
-                                  <FormControl>
-                                    <select
-                                      {...optionField}
-                                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                                      disabled={isPending || !selectedFilterId}
-                                    >
-                                      <option value="">
-                                        Select option
-                                      </option>
-                                      {options.map((opt) => (
-                                        <option key={opt.id} value={opt.id}>
-                                          {opt.value}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                attributeMappingsFieldArray.remove(index)
-                              }
-                              disabled={isPending}
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="category_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category *</FormLabel>
+                          <FormControl>
+                            <select
+                              {...field}
+                              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                              <option value="">Select a category</option>
+                              {categories.map((cat: any) => (
+                                <option key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </option>
+                              ))}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name *</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter product name"
+                              autoFocus
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Short, customer‑friendly description"
+                              rows={4}
+                              {...field}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* Pricing & merchandising */}
+              <section className="space-y-4 border-t pt-6">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Pricing & Merchandising
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="sale_price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sale Price (₹) *</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="e.g. 999.00"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value === ""
+                                  ? 0
+                                  : parseFloat(e.target.value) || 0
+                              )
+                            }
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          {field.value
+                            ? `Final price: ₹${(field.value as number).toFixed(
+                                2
+                              )}`
+                            : "Price shown to customers"}
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="product_label"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Label</FormLabel>
+                        <FormControl>
+                          <select
+                            {...field}
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">None</option>
+                            <option value="New">New</option>
+                            <option value="Best Seller">Best Seller</option>
+                            <option value="Hot Deal">Hot Deal</option>
+                            <option value="Limited Edition">
+                              Limited Edition
+                            </option>
+                            <option value="Top Rated">Top Rated</option>
+                            <option value="Sale">Sale</option>
+                            <option value="Exclusive">Exclusive</option>
+                          </select>
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          Badge displayed on cards (e.g. New, Best Seller).
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="warranty_label"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Warranty</FormLabel>
+                        <FormControl>
+                          <select
+                            {...field}
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">No Warranty</option>
+                            <option value="3 Months Warranty">
+                              3 Months Warranty
+                            </option>
+                            <option value="6 Months Warranty">
+                              6 Months Warranty
+                            </option>
+                            <option value="9 Months Warranty">
+                              9 Months Warranty
+                            </option>
+                            <option value="1 Year Warranty">
+                              1 Year Warranty
+                            </option>
+                            <option value="1.5 Years Warranty">
+                              1.5 Years Warranty
+                            </option>
+                            <option value="2 Years Warranty">
+                              2 Years Warranty
+                            </option>
+                            <option value="3 Years Warranty">
+                              3 Years Warranty
+                            </option>
+                            <option value="5 Years Warranty">
+                              5 Years Warranty
+                            </option>
+                            <option value="Lifetime Warranty">
+                              Lifetime Warranty
+                            </option>
+                          </select>
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          Shown next to product to highlight protection.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="is_featured"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-start gap-4 rounded-lg border border-input p-4 bg-muted/40">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            id="is_featured"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            disabled={isPending}
+                            className="mt-1 h-5 w-5 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500 focus:ring-2 cursor-pointer"
+                          />
+                        </FormControl>
+                        <label
+                          htmlFor="is_featured"
+                          className="cursor-pointer flex-1"
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xl">⭐</span>
+                            <span className="font-semibold text-sm md:text-base">
+                              Mark as Featured Product
+                            </span>
                           </div>
-                        );
-                      })}
+                          <p className="text-xs md:text-sm text-muted-foreground">
+                            Featured products appear prominently on the homepage
+                            and in search.
+                          </p>
+                        </label>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </section>
+
+              {/* Content & attributes */}
+              <section className="space-y-6 border-t pt-6">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Content & Attributes
+                </h2>
+
+                {/* Tags & Points in two columns */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Tags Section */}
+                  <div className="space-y-2">
+                    <FormLabel>Tags</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Keywords that help in search and grouping (e.g. smart,
+                      wireless, 4K).
+                    </p>
+                    <div className="space-y-2">
+                      {tagsFieldArray.fields.map((field, index) => (
+                        <div
+                          key={field.id}
+                          className="flex gap-2 items-center"
+                        >
+                          <FormField
+                            control={form.control}
+                            name={`tags.${index}.value`}
+                            render={({ field: inputField }) => (
+                              <FormItem className="flex-1">
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter tag"
+                                    {...inputField}
+                                    disabled={isPending}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => tagsFieldArray.remove(index)}
+                            disabled={isPending}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        attributeMappingsFieldArray.append({
-                          filter_id: "",
-                          filter_option_id: "",
-                        })
-                      }
-                      disabled={isPending || filters.length === 0}
+                      onClick={() => tagsFieldArray.append({ value: "" })}
+                      disabled={isPending}
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Add attribute
+                      Add Tag
                     </Button>
-                  </>
-                )}
-              </div>
+                  </div>
 
-              <div className="flex gap-4">
-                <Button type="submit" disabled={isPending}>
-                  {isPending
-                    ? isEditing
-                      ? "Updating..."
-                      : "Creating..."
-                    : isEditing
-                    ? "Update Product"
-                    : "Create Product"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/products")}
-                >
-                  Cancel
-                </Button>
-              </div>
+                  {/* Points Section */}
+                  <div className="space-y-2">
+                    <FormLabel>Key Points</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Short bullets that highlight main benefits (max 70
+                      characters each).
+                    </p>
+                    <div className="space-y-2">
+                      {pointsFieldArray.fields.map((field, index) => (
+                        <div
+                          key={field.id}
+                          className="flex gap-2 items-center"
+                        >
+                          <FormField
+                            control={form.control}
+                            name={`points.${index}.value`}
+                            render={({ field: inputField }) => (
+                              <FormItem className="flex-1">
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter point"
+                                    {...inputField}
+                                    maxLength={70}
+                                    disabled={isPending}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => pointsFieldArray.remove(index)}
+                            disabled={isPending}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => pointsFieldArray.append({ value: "" })}
+                      disabled={isPending}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Point
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Technical Details Section */}
+                <div className="space-y-2">
+                  <FormLabel>Technical Details</FormLabel>
+                  <p className="text-xs text-muted-foreground">
+                    Add specifications like weight, dimensions, material,
+                    voltage, etc.
+                  </p>
+                  <div className="space-y-2">
+                    {technicalDetailsFieldArray.fields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="flex flex-col md:flex-row gap-2 items-stretch md:items-center"
+                      >
+                        <FormField
+                          control={form.control}
+                          name={`technical_details.${index}.label`}
+                          render={({ field: labelField }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  placeholder="Label (e.g. Weight)"
+                                  {...labelField}
+                                  disabled={isPending}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`technical_details.${index}.value`}
+                          render={({ field: valueField }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  placeholder="Value (e.g. 2.5 kg)"
+                                  {...valueField}
+                                  disabled={isPending}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            technicalDetailsFieldArray.remove(index)
+                          }
+                          disabled={isPending}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      technicalDetailsFieldArray.append({
+                        label: "",
+                        value: "",
+                      })
+                    }
+                    disabled={isPending}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Technical Detail
+                  </Button>
+                </div>
+
+                {/* Attribute mapping (filter options by category) */}
+                <div className="space-y-2">
+                  <FormLabel>Attribute Mapping</FormLabel>
+                  <p className="text-xs text-muted-foreground">
+                    Connect this product to filter options from its category.
+                    These will show up as attributes on the product details
+                    page.
+                  </p>
+                  {!categoryId ? (
+                    <p className="text-sm text-muted-foreground italic">
+                      Select a category to load filters and options.
+                    </p>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        {(
+                          (watchedAttributeMappings as {
+                            filter_id?: string;
+                            filter_option_id?: string;
+                          }[]) || []
+                        ).map((row, index) => {
+                          const selectedFilterId = row?.filter_id || "";
+                          const selectedFilter = filters.find(
+                            (f) => f.id === selectedFilterId
+                          );
+                          const options = selectedFilter?.options ?? [];
+                          const field =
+                            attributeMappingsFieldArray.fields[index];
+                          if (!field) return null;
+                          return (
+                            <div
+                              key={field.id}
+                              className="flex flex-col md:flex-row gap-2 items-stretch md:items-center"
+                            >
+                              <FormField
+                                control={form.control}
+                                name={`attribute_mappings.${index}.filter_id`}
+                                render={({ field: selectField }) => (
+                                  <FormItem className="min-w-[160px] flex-1">
+                                    <FormControl>
+                                      <select
+                                        {...selectField}
+                                        onChange={(e) => {
+                                          selectField.onChange(e.target.value);
+                                          form.setValue(
+                                            `attribute_mappings.${index}.filter_option_id`,
+                                            ""
+                                          );
+                                        }}
+                                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        disabled={isPending}
+                                      >
+                                        <option value="">Select filter</option>
+                                        {filters.map((f) => (
+                                          <option key={f.id} value={f.id}>
+                                            {f.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name={`attribute_mappings.${index}.filter_option_id`}
+                                render={({ field: optionField }) => (
+                                  <FormItem className="min-w-[160px] flex-1">
+                                    <FormControl>
+                                      <select
+                                        {...optionField}
+                                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        disabled={isPending || !selectedFilterId}
+                                      >
+                                        <option value="">Select option</option>
+                                        {options.map((opt) => (
+                                          <option key={opt.id} value={opt.id}>
+                                            {opt.value}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  attributeMappingsFieldArray.remove(index)
+                                }
+                                disabled={isPending}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          attributeMappingsFieldArray.append({
+                            filter_id: "",
+                            filter_option_id: "",
+                          })
+                        }
+                        disabled={isPending || filters.length === 0}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Attribute
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </section>
+
+              {/* Actions */}
+              <section className="border-t pt-6">
+                <div className="flex flex-wrap gap-3">
+                  <Button type="submit" disabled={isPending}>
+                    {isPending
+                      ? isEditing
+                        ? "Updating..."
+                        : "Creating..."
+                      : isEditing
+                      ? "Update Product"
+                      : "Create Product"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate("/products")}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </section>
             </form>
           </Form>
         </CardContent>
