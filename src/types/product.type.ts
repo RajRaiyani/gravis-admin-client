@@ -21,6 +21,14 @@ export interface TechnicalDetail {
   value: string;
 }
 
+/** Attribute mapping from category filters (product GET response) */
+export interface ProductFilterOption {
+  filter_option_id: string;
+  filter_id: string;
+  filter_name: string;
+  value: string;
+}
+
 export interface Product {
   id: string;
   category_id: string;
@@ -39,6 +47,7 @@ export interface Product {
   updated_at?: string;
   category?: ProductCategory;
   images?: ProductImageData[];
+  filter_options?: ProductFilterOption[];
 }
 
 export interface CreateProductData {
@@ -53,6 +62,7 @@ export interface CreateProductData {
   product_label?: string;
   warranty_label?: string;
   is_featured?: boolean;
+  filter_option_ids?: string[];
 }
 
 export interface UpdateProductData {
@@ -67,6 +77,7 @@ export interface UpdateProductData {
   product_label?: string;
   warranty_label?: string;
   is_featured?: boolean;
+  filter_option_ids?: string[];
 }
 
 export interface ProductFilterParams {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { productFormSchema, type ProductFormValues } from "@/schema/product";
@@ -9,6 +9,7 @@ import {
   useUpdateProduct,
 } from "@/hooks/useProducts";
 import { useGetProductCategories } from "@/hooks/useProductCategories";
+import { useGetFilters } from "@/hooks/useFilters";
 import { ImageCropInput } from "@/components/shared/ImageCropInput";
 import { uploadFile } from "@/services/api/file";
 import { toast } from "react-hot-toast";
@@ -73,8 +74,26 @@ export default function AddOrUpdateProduct() {
       warranty_label: "",
       is_featured: false,
       imageFile: null,
+      attribute_mappings: [],
     },
   });
+
+  const watchedCategoryId = useWatch({
+    control: form.control,
+    name: "category_id",
+    defaultValue: "",
+  });
+  const watchedAttributeMappings = useWatch({
+    control: form.control,
+    name: "attribute_mappings",
+    defaultValue: [],
+  });
+  const categoryId =
+    String(watchedCategoryId || "") ||
+    (isEditing ? product?.category_id : "") ||
+    "";
+  const { data: filtersData } = useGetFilters(categoryId);
+  const filters = Array.isArray(filtersData) ? filtersData : [];
 
   const tagsFieldArray = useFieldArray({
     control: form.control,
@@ -89,6 +108,11 @@ export default function AddOrUpdateProduct() {
   const technicalDetailsFieldArray = useFieldArray({
     control: form.control,
     name: "technical_details",
+  });
+
+  const attributeMappingsFieldArray = useFieldArray({
+    control: form.control,
+    name: "attribute_mappings",
   });
 
   // Load product data when editing
@@ -125,6 +149,18 @@ export default function AddOrUpdateProduct() {
             }))
         : [];
 
+      const attributeMappings = Array.isArray(product.filter_options)
+        ? product.filter_options
+            .filter(
+              (fo: { filter_option_id?: string; filter_id?: string }) =>
+                fo?.filter_option_id && fo?.filter_id
+            )
+            .map((fo: { filter_option_id: string; filter_id: string }) => ({
+              filter_id: fo.filter_id,
+              filter_option_id: fo.filter_option_id,
+            }))
+        : [];
+
       form.reset({
         category_id: product.category_id || "",
         name: product.name || "",
@@ -138,6 +174,7 @@ export default function AddOrUpdateProduct() {
         warranty_label: product.warranty_label || "",
         is_featured: product.is_featured || false,
         imageFile: null,
+        attribute_mappings: attributeMappings,
       });
     }
   }, [product, isEditing, form]);
@@ -183,6 +220,10 @@ export default function AddOrUpdateProduct() {
       .map((p) => p.value?.trim())
       .filter((v) => v && v.length > 0);
 
+    const filterOptionIds = (data.attribute_mappings || [])
+      .map((m) => m.filter_option_id)
+      .filter(Boolean);
+
     const submitData = {
       category_id: data.category_id,
       name: data.name,
@@ -196,6 +237,7 @@ export default function AddOrUpdateProduct() {
       product_label: data.product_label || undefined,
       warranty_label: data.warranty_label || undefined,
       is_featured: data.is_featured || false,
+      filter_option_ids: filterOptionIds,
     };
 
     if (isEditing && id) {
@@ -629,6 +671,126 @@ export default function AddOrUpdateProduct() {
                   <Plus className="h-4 w-4 mr-2" />
                   Add Technical Detail
                 </Button>
+              </div>
+
+              {/* Attribute mapping (filter options by category) */}
+              <div className="space-y-2">
+                <FormLabel>Attribute mapping</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Map product to category filters. Select a category first, then
+                  add filter + option pairs. These appear as attributes on the
+                  product.
+                </p>
+                {!categoryId ? (
+                  <p className="text-sm text-muted-foreground italic">
+                    Select a category to load filters and options.
+                  </p>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      {((watchedAttributeMappings as { filter_id?: string; filter_option_id?: string }[]) || []).map(
+                        (row, index) => {
+                        const selectedFilterId = row?.filter_id || "";
+                        const selectedFilter = filters.find(
+                          (f) => f.id === selectedFilterId
+                        );
+                        const options = selectedFilter?.options ?? [];
+                        const field = attributeMappingsFieldArray.fields[index];
+                        if (!field) return null;
+                        return (
+                          <div
+                            key={field.id}
+                            className="flex gap-2 items-center flex-wrap"
+                          >
+                            <FormField
+                              control={form.control}
+                              name={`attribute_mappings.${index}.filter_id`}
+                              render={({ field: selectField }) => (
+                                <FormItem className="min-w-[160px]">
+                                  <FormControl>
+                                    <select
+                                      {...selectField}
+                                      onChange={(e) => {
+                                        selectField.onChange(e.target.value);
+                                        form.setValue(
+                                          `attribute_mappings.${index}.filter_option_id`,
+                                          ""
+                                        );
+                                      }}
+                                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                      disabled={isPending}
+                                    >
+                                      <option value="">
+                                        Select filter
+                                      </option>
+                                      {filters.map((f) => (
+                                        <option key={f.id} value={f.id}>
+                                          {f.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`attribute_mappings.${index}.filter_option_id`}
+                              render={({ field: optionField }) => (
+                                <FormItem className="min-w-[160px]">
+                                  <FormControl>
+                                    <select
+                                      {...optionField}
+                                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                      disabled={isPending || !selectedFilterId}
+                                    >
+                                      <option value="">
+                                        Select option
+                                      </option>
+                                      {options.map((opt) => (
+                                        <option key={opt.id} value={opt.id}>
+                                          {opt.value}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                attributeMappingsFieldArray.remove(index)
+                              }
+                              disabled={isPending}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        attributeMappingsFieldArray.append({
+                          filter_id: "",
+                          filter_option_id: "",
+                        })
+                      }
+                      disabled={isPending || filters.length === 0}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add attribute
+                    </Button>
+                  </>
+                )}
               </div>
 
               <div className="flex gap-4">

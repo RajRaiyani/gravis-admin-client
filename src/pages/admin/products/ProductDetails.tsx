@@ -486,6 +486,33 @@ export default function ProductDetails() {
                 </div>
               )}
 
+            {product.filter_options &&
+              product.filter_options.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Attributes
+                  </p>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[40%]">Filter</TableHead>
+                        <TableHead>Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {product.filter_options.map((fo) => (
+                        <TableRow key={fo.filter_option_id}>
+                          <TableCell className="font-medium">
+                            {fo.filter_name || "—"}
+                          </TableCell>
+                          <TableCell>{fo.value || "—"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
             {product.created_at && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground">

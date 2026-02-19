@@ -49,6 +49,14 @@ export const productFormSchema = z.object({
     .optional(),
   is_featured: z.boolean().default(false),
   imageFile: z.instanceof(File).nullable().optional(),
+  attribute_mappings: z
+    .array(
+      z.object({
+        filter_id: z.string(),
+        filter_option_id: z.string(),
+      })
+    )
+    .default([]),
 });
 
 // Use z.input to get the type before transformation (for form values)
