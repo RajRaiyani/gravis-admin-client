@@ -9,6 +9,7 @@ import {
   useUpdateInquiryStatus,
   type Inquiry,
 } from "@/hooks/useInquiries";
+import { getInquiryContactDisplay } from "@/types/inquiry.type";
 import { toast } from "react-hot-toast";
 import useDebounce from "@/hooks/useDebounce";
 
@@ -174,58 +175,71 @@ export default function Inquiries() {
       ) : (
         <>
           <div className="space-y-4">
-            {inquiries.map((inquiry: Inquiry) => (
-              <Card
-                key={inquiry.id}
-                className="hover:shadow-md transition-shadow"
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <CardTitle className="text-lg">
-                          {inquiry.name}
+            {inquiries.map((inquiry: Inquiry) => {
+              const contact = getInquiryContactDisplay(inquiry);
+              return (
+                <Card
+                  key={inquiry.id}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              statusColors[inquiry.status] ||
+                              statusColors.pending
+                            }`}
+                          >
+                            {inquiry.status.replace("_", " ").toUpperCase()}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-muted text-muted-foreground capitalize">
+                            {inquiry.type.replace("_", " ")}
+                          </span>
+                        </div>
+                        <CardTitle className="text-lg mb-2">
+                          {contact.name}
                         </CardTitle>
-                        <span
-                          className={`px-2 py-1 -mx-4 rounded-full text-xs font-medium ${
-                            statusColors[inquiry.status] || statusColors.pending
-                          }`}
-                        >
-                          {inquiry.status.replace("_", " ").toUpperCase()}
-                        </span>
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p>
+                            <strong>Email:</strong> {contact.email}
+                          </p>
+                          <p>
+                            <strong>Phone:</strong> {contact.phone}
+                          </p>
+                          <p>
+                            <strong>Date:</strong>{" "}
+                            {formatDate(inquiry.created_at)}
+                          </p>
+                          {inquiry.product && (
+                            <p>
+                              <strong>Product:</strong> {inquiry.product.name}{" "}
+                              (₹
+                              {Number(inquiry.product.sale_price_in_rupee).toLocaleString()}
+                              )
+                            </p>
+                          )}
+                          {inquiry.meta_data?.quantity != null && (
+                            <p>
+                              <strong>Quantity:</strong>{" "}
+                              {inquiry.meta_data.quantity}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div className="space-y-1 text-sm text-muted-foreground">
-                        <p>
-                          <strong>Email:</strong> {inquiry.email}
-                        </p>
-                        <p>
-                          <strong>Phone:</strong> {inquiry.phone_number}
-                        </p>
-                        <p>
-                          <strong>Date:</strong>{" "}
-                          {formatDate(inquiry.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      {/* <Link to={`/inquiries/${inquiry.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link> */}
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(inquiry.id)}
                         disabled={isDeleting && deletingId === inquiry.id}
+                        className="shrink-0 text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
+                  </CardHeader>
+                  <CardContent className="space-y-3">
                     <div>
                       <p className="text-sm font-medium mb-1">Message:</p>
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-3">
@@ -248,10 +262,10 @@ export default function Inquiries() {
                         <option value="closed">Closed</option>
                       </select>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Pagination */}

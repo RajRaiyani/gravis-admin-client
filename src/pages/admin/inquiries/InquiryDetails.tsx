@@ -7,14 +7,15 @@ import {
   useDeleteInquiry,
   useUpdateInquiryStatus,
 } from "@/hooks/useInquiries";
+import { getInquiryContactDisplay } from "@/types/inquiry.type";
 import { toast } from "react-hot-toast";
 
-// const statusColors = {
-//   pending: "bg-yellow-100 text-yellow-800",
-//   in_progress: "bg-blue-100 text-blue-800",
-//   resolved: "bg-green-100 text-green-800",
-//   closed: "bg-gray-100 text-gray-800",
-// };
+const statusColors: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  in_progress: "bg-blue-100 text-blue-800",
+  resolved: "bg-green-100 text-green-800",
+  closed: "bg-gray-100 text-gray-800",
+};
 
 export default function InquiryDetails() {
   const { id } = useParams<{ id: string }>();
@@ -33,9 +34,9 @@ export default function InquiryDetails() {
           toast.success("Inquiry deleted successfully");
           navigate("/inquiries");
         },
-        onError: (error: any) => {
+        onError: (err: { response?: { data?: { error?: string } } }) => {
           toast.error(
-            error.response?.data?.error || "Failed to delete inquiry"
+            err.response?.data?.error || "Failed to delete inquiry"
           );
         },
       });
@@ -50,8 +51,8 @@ export default function InquiryDetails() {
         onSuccess: () => {
           toast.success("Status updated successfully");
         },
-        onError: (error: any) => {
-          toast.error(error.response?.data?.error || "Failed to update status");
+        onError: (err: { response?: { data?: { error?: string } } }) => {
+          toast.error(err.response?.data?.error || "Failed to update status");
         },
       }
     );
@@ -88,6 +89,14 @@ export default function InquiryDetails() {
     );
   }
 
+  const contact = getInquiryContactDisplay(inquiry);
+  const hasMetaData =
+    inquiry.meta_data &&
+    Object.keys(inquiry.meta_data).length > 0 &&
+    Object.values(inquiry.meta_data).some(
+      (v) => v !== undefined && v !== null && v !== ""
+    );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -110,24 +119,35 @@ export default function InquiryDetails() {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Contact Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
-              <p className="text-base">{inquiry.name}</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Name
+              </p>
+              <p className="text-base">{contact.name}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Email</p>
-              <p className="text-base">{inquiry.email}</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Email
+              </p>
+              <p className="text-base break-all">{contact.email}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Phone</p>
-              <p className="text-base">{inquiry.phone_number}</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Phone
+              </p>
+              <p className="text-base">{contact.phone}</p>
             </div>
+            {inquiry.guest_contact && (
+              <p className="text-xs text-muted-foreground pt-2 border-t">
+                Source: guest_contact
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -137,7 +157,7 @@ export default function InquiryDetails() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-muted-foreground mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase mb-2">
                 Status
               </p>
               <select
@@ -153,14 +173,22 @@ export default function InquiryDetails() {
               </select>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Type
+              </p>
+              <p className="text-base capitalize">
+                {inquiry.type.replace("_", " ")}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase">
                 Created At
               </p>
               <p className="text-base">{formatDate(inquiry.created_at)}</p>
             </div>
             {inquiry.updated_at && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground uppercase">
                   Updated At
                 </p>
                 <p className="text-base">{formatDate(inquiry.updated_at)}</p>
@@ -176,6 +204,100 @@ export default function InquiryDetails() {
         </CardHeader>
         <CardContent>
           <p className="text-base whitespace-pre-wrap">{inquiry.message}</p>
+        </CardContent>
+      </Card>
+
+      {inquiry.product && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Product</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Name
+              </p>
+              <p className="text-base">{inquiry.product.name}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Price (₹)
+              </p>
+              <p className="text-base">
+                ₹
+                {Number(inquiry.product.sale_price_in_rupee).toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Product ID
+              </p>
+              <p className="text-sm font-mono break-all">{inquiry.product.id}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {hasMetaData && inquiry.meta_data && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Meta Data</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {Object.entries(inquiry.meta_data).map(
+                ([key, value]) =>
+                  value !== undefined &&
+                  value !== null &&
+                  value !== "" && (
+                    <div key={key}>
+                      <dt className="text-xs font-medium text-muted-foreground uppercase">
+                        {key.replace(/_/g, " ")}
+                      </dt>
+                      <dd className="text-sm mt-0.5">
+                        {typeof value === "object"
+                          ? JSON.stringify(value)
+                          : String(value)}
+                      </dd>
+                    </div>
+                  )
+              )}
+            </dl>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>System Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase">
+              Inquiry ID
+            </p>
+            <p className="text-sm font-mono break-all">{inquiry.id}</p>
+          </div>
+          {inquiry.product_id && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Product ID
+              </p>
+              <p className="text-sm font-mono break-all">
+                {inquiry.product_id}
+              </p>
+            </div>
+          )}
+          {inquiry.customer != null && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Customer
+              </p>
+              <pre className="text-xs font-mono bg-muted p-3 rounded-md overflow-auto max-h-40">
+                {JSON.stringify(inquiry.customer, null, 2)}
+              </pre>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
