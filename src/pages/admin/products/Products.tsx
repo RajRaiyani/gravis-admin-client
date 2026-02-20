@@ -3,8 +3,29 @@ import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGetProductsInfinite, useDeleteProduct } from "@/hooks/useProducts";
-import type { Product } from "@/types/product.type";
+
 import { useState, useRef, useCallback, useEffect } from "react";
+
+interface ProductSmall {
+  id: string;
+  name: string;
+  description?: string;
+  sale_price_in_rupee: number;
+  sale_price: number;
+  tags: string[];
+  category: {
+    id: string;
+    name: string;
+  };
+  product_label?: string | null;
+  warranty_label?: string | null;
+  is_featured: boolean;
+  created_at?: string;
+  updated_at?: string;
+  primary_image?: {
+    url: string;
+  };
+}
 
 export default function Products() {
   const {
@@ -74,12 +95,6 @@ export default function Products() {
     return `₹${Number(priceInRupees).toFixed(2)}`;
   };
 
-  const getPrimaryImage = (product: Product) => {
-    if (!product.images || product.images.length === 0) return null;
-    const primaryImage = product.images.find((img) => img.is_primary);
-    return primaryImage?.image?.url || product.images[0]?.image?.url || null;
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -105,7 +120,7 @@ export default function Products() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {products.map((product: Product) => {
+          {products.map((product: ProductSmall) => {
             const primaryImageUrl = product.primary_image?.url;
             return (
               <Link to={`/products/${product.id}`}>

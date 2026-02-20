@@ -30,7 +30,7 @@ export default function ProductDetails() {
   const { data: productData, isLoading, error } = useGetProduct(id || "");
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
   const { mutate: addImage, isPending: isAddingImage } = useAddProductImage(
-    id || ""
+    id || "",
   );
   const { mutate: deleteImage, isPending: isDeletingImage } =
     useDeleteProductImage(id || "");
@@ -91,7 +91,7 @@ export default function ProductDetails() {
       const croppedFile = new File(
         [croppedImageBlob],
         `cropped-image-${Date.now()}.png`,
-        { type: "image/png" }
+        { type: "image/png" },
       );
 
       const formData = new FormData();
@@ -335,18 +335,18 @@ export default function ProductDetails() {
                     product.product_label === "New"
                       ? "bg-blue-100 text-blue-800"
                       : product.product_label === "Best Seller"
-                      ? "bg-green-100 text-green-800"
-                      : product.product_label === "Hot Deal"
-                      ? "bg-red-100 text-red-800"
-                      : product.product_label === "Limited Edition"
-                      ? "bg-purple-100 text-purple-800"
-                      : product.product_label === "Top Rated"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : product.product_label === "Sale"
-                      ? "bg-orange-100 text-orange-800"
-                      : product.product_label === "Exclusive"
-                      ? "bg-indigo-100 text-indigo-800"
-                      : "bg-gray-100 text-gray-800"
+                        ? "bg-green-100 text-green-800"
+                        : product.product_label === "Hot Deal"
+                          ? "bg-red-100 text-red-800"
+                          : product.product_label === "Limited Edition"
+                            ? "bg-purple-100 text-purple-800"
+                            : product.product_label === "Top Rated"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : product.product_label === "Sale"
+                                ? "bg-orange-100 text-orange-800"
+                                : product.product_label === "Exclusive"
+                                  ? "bg-indigo-100 text-indigo-800"
+                                  : "bg-gray-100 text-gray-800"
                   }
                 >
                   {product.product_label}
@@ -386,7 +386,7 @@ export default function ProductDetails() {
                   </dt>
                   <dd className="text-xl md:text-2xl font-semibold">
                     {formatPrice(
-                      product.sale_price_in_rupee ?? product.sale_price
+                      product.sale_price_in_rupee ?? product.sale_price,
                     )}
                   </dd>
                 </div>
@@ -425,7 +425,9 @@ export default function ProductDetails() {
                       product.is_featured ? "text-green-600" : "text-gray-500"
                     }
                   >
-                    {product.is_featured ? "✓ Featured Product" : "Not Featured"}
+                    {product.is_featured
+                      ? "✓ Featured Product"
+                      : "Not Featured"}
                   </dd>
                 </div>
               </dl>
@@ -444,7 +446,8 @@ export default function ProductDetails() {
             )}
 
             {/* Tags & key points */}
-            {(product.tags?.length ?? 0) > 0 || (product.points?.length ?? 0) > 0 ? (
+            {(product.tags?.length ?? 0) > 0 ||
+            (product.points?.length ?? 0) > 0 ? (
               <section className="border-t pt-4 space-y-4">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Highlights
@@ -501,9 +504,7 @@ export default function ProductDetails() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[40%]">
-                          Specification
-                        </TableHead>
+                        <TableHead className="w-[40%]">Specification</TableHead>
                         <TableHead>Value</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -511,12 +512,12 @@ export default function ProductDetails() {
                       {product.technical_details
                         .filter(
                           (d: { label?: string; value?: string }) =>
-                            d && (d.label || d.value)
+                            d && (d.label || d.value),
                         )
                         .map(
                           (
                             d: { label?: string; value?: string },
-                            idx: number
+                            idx: number,
                           ) => (
                             <TableRow key={idx}>
                               <TableCell className="font-medium">
@@ -524,7 +525,7 @@ export default function ProductDetails() {
                               </TableCell>
                               <TableCell>{d.value || "—"}</TableCell>
                             </TableRow>
-                          )
+                          ),
                         )}
                     </TableBody>
                   </Table>

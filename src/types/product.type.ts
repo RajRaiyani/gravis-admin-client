@@ -29,6 +29,7 @@ export interface ProductFilterOption {
   value: string;
 }
 
+
 export interface Product {
   id: string;
   category_id: string;
@@ -46,7 +47,7 @@ export interface Product {
   created_at?: string;
   updated_at?: string;
   category?: ProductCategory;
-  primary_image?: ProductImage;
+  images?: ProductImageData[];
   filter_options?: ProductFilterOption[];
 }
 
