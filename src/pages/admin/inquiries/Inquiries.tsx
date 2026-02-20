@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trash2, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +8,19 @@ import {
   useDeleteInquiry,
   useUpdateInquiryStatus,
   type Inquiry,
+  INQUIRIES_PAGE_SIZE,
 } from "@/hooks/useInquiries";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { getInquiryContactDisplay } from "@/types/inquiry.type";
 import { toast } from "react-hot-toast";
 import useDebounce from "@/hooks/useDebounce";
 
-type InquiryTypeFilter = "general" | "contact" | "product" | "all";
+type InquiryTypeFilter =
+  | "general"
+  | "contact"
+  | "product"
+  | "guest_enquiry"
+  | "all";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -28,15 +35,47 @@ export default function Inquiries() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<InquiryTypeFilter>("all");
   const [offset, setOffset] = useState(0);
-  const limit = 20;
+  const [accumulated, setAccumulated] = useState<Inquiry[]>([]);
 
   const { data, isLoading, error } = useInquiries({
     offset,
-    limit,
+    limit: INQUIRIES_PAGE_SIZE,
     type: typeFilter !== "all" ? typeFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
     search: debouncedSearchTerm || undefined,
   });
+
+  const resetFilters = () => {
+    setOffset(0);
+    setAccumulated([]);
+  };
+
+  // Reset list when filters change (debounced search updates asynchronously)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset offset/accumulated when filters change
+    resetFilters();
+  }, [typeFilter, statusFilter, debouncedSearchTerm]);
+
+  // Sync query result into accumulated list (replace first page, append next pages)
+  useEffect(() => {
+    if (!data?.data) return;
+    if (offset === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync async query pages to local list
+      setAccumulated(data.data);
+    } else {
+      setAccumulated((prev) => [...prev, ...data.data]);
+    }
+  }, [data?.data, offset]);
+
+  const hasMore = data?.meta?.hasMore ?? false;
+  const isLoadingMore = offset > 0 && isLoading;
+
+  const { triggerRef, isLoadingMore: isScrollLoading, hasMoreItems } =
+    useInfiniteScroll({
+      onLoadMore: () => setOffset((o) => o + INQUIRIES_PAGE_SIZE),
+      hasMore,
+      isLoading: isLoadingMore,
+    });
 
   const { mutate: deleteInquiry, isPending: isDeleting } = useDeleteInquiry();
   const { mutate: updateStatus, isPending: isUpdating } =
@@ -93,10 +132,7 @@ export default function Inquiries() {
     );
   }
 
-  const inquiries: Inquiry[] = data?.data || [];
-  const meta = data?.meta;
-  const total = meta?.total || inquiries.length;
-  const hasMore = meta?.hasMore || false;
+  const inquiries: Inquiry[] = accumulated;
 
   return (
     <div className="space-y-6">
@@ -118,7 +154,7 @@ export default function Inquiries() {
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
-                  setOffset(0);
+                  resetFilters();
                 }}
                 className="pl-10"
               />
@@ -129,7 +165,7 @@ export default function Inquiries() {
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
-                  setOffset(0);
+                  resetFilters();
                 }}
                 className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
@@ -146,7 +182,7 @@ export default function Inquiries() {
                 value={typeFilter}
                 onChange={(e) => {
                   setTypeFilter(e.target.value as InquiryTypeFilter);
-                  setOffset(0);
+                  resetFilters();
                 }}
                 className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
@@ -154,6 +190,7 @@ export default function Inquiries() {
                 <option value="general">General</option>
                 <option value="contact">Contact</option>
                 <option value="product">Product</option>
+                <option value="guest_enquiry">Guest Enquiry</option>
               </select>
             </div>
           </div>
@@ -268,29 +305,11 @@ export default function Inquiries() {
             })}
           </div>
 
-          {/* Pagination */}
-          {(hasMore || offset > 0) && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Showing {offset + 1} to {Math.min(offset + limit, total)} of{" "}
-                {total} inquiries
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setOffset(Math.max(0, offset - limit))}
-                  disabled={offset === 0}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setOffset(offset + limit)}
-                  disabled={!hasMore}
-                >
-                  Next
-                </Button>
-              </div>
+          {/* Infinite scroll trigger and loading */}
+          {hasMoreItems && <div ref={triggerRef} className="h-4" />}
+          {isScrollLoading && (
+            <div className="py-4 text-center text-sm text-muted-foreground">
+              Loading more...
             </div>
           )}
         </>

@@ -10,6 +10,36 @@ import type { Inquiry, InquiriesResponse } from "@/types/inquiry.type";
 
 export type { Inquiry, InquiriesResponse };
 
+const INQUIRIES_PAGE_SIZE = 20;
+
+/** Normalize list API response: supports raw array or { data, meta } */
+function normalizeListResponse(
+  raw: unknown,
+  offset: number,
+  limit: number
+): InquiriesResponse {
+  if (Array.isArray(raw)) {
+    return {
+      data: raw as Inquiry[],
+      meta: {
+        total: raw.length,
+        offset,
+        limit,
+        hasMore: raw.length >= limit,
+      },
+    };
+  }
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "data" in raw &&
+    Array.isArray((raw as InquiriesResponse).data)
+  ) {
+    return raw as InquiriesResponse;
+  }
+  return { data: [], meta: { total: 0, offset, limit, hasMore: false } };
+}
+
 interface ApiError {
   response?: {
     data?: {
@@ -21,19 +51,23 @@ interface ApiError {
   message?: string;
 }
 
-// Fetch all inquiries
-export function useInquiries(params?: {
+export type InquiryListParams = {
   offset?: number;
   limit?: number;
   type?: "general" | "contact" | "product" | "guest_enquiry";
   status?: string;
   search?: string;
-}) {
+};
+
+// Fetch inquiries (single page by offset) — use with useInfiniteScroll for infinite list
+export function useInquiries(params?: InquiryListParams) {
   return useQuery<InquiriesResponse>({
     queryKey: ["inquiries", params],
     queryFn: async (): Promise<InquiriesResponse> => {
       const response = await listInquiries(params);
-      return response as InquiriesResponse;
+      const offset = params?.offset ?? 0;
+      const limit = params?.limit ?? INQUIRIES_PAGE_SIZE;
+      return normalizeListResponse(response, offset, limit);
     },
   });
 }
@@ -80,4 +114,6 @@ export function useDeleteInquiry() {
     },
   });
 }
+
+export { INQUIRIES_PAGE_SIZE };
 
