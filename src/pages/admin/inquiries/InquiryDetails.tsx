@@ -10,12 +10,12 @@ import {
 import { getInquiryContactDisplay } from "@/types/inquiry.type";
 import { toast } from "react-hot-toast";
 
-const statusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  in_progress: "bg-blue-100 text-blue-800",
-  resolved: "bg-green-100 text-green-800",
-  closed: "bg-gray-100 text-gray-800",
-};
+// const statusColors: Record<string, string> = {
+//   pending: "bg-yellow-100 text-yellow-800",
+//   in_progress: "bg-blue-100 text-blue-800",
+//   resolved: "bg-green-100 text-green-800",
+//   closed: "bg-gray-100 text-gray-800",
+// };
 
 export default function InquiryDetails() {
   const { id } = useParams<{ id: string }>();
@@ -35,9 +35,7 @@ export default function InquiryDetails() {
           navigate("/inquiries");
         },
         onError: (err: { response?: { data?: { error?: string } } }) => {
-          toast.error(
-            err.response?.data?.error || "Failed to delete inquiry"
-          );
+          toast.error(err.response?.data?.error || "Failed to delete inquiry");
         },
       });
     }
@@ -54,7 +52,7 @@ export default function InquiryDetails() {
         onError: (err: { response?: { data?: { error?: string } } }) => {
           toast.error(err.response?.data?.error || "Failed to update status");
         },
-      }
+      },
     );
   };
 
@@ -94,7 +92,7 @@ export default function InquiryDetails() {
     inquiry.meta_data &&
     Object.keys(inquiry.meta_data).length > 0 &&
     Object.values(inquiry.meta_data).some(
-      (v) => v !== undefined && v !== null && v !== ""
+      (v) => v !== undefined && v !== null && v !== "",
     );
 
   return (
@@ -224,15 +222,16 @@ export default function InquiryDetails() {
                 Price (₹)
               </p>
               <p className="text-base">
-                ₹
-                {Number(inquiry.product.sale_price_in_rupee).toLocaleString()}
+                ₹{Number(inquiry.product.sale_price_in_rupee).toLocaleString()}
               </p>
             </div>
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase">
                 Product ID
               </p>
-              <p className="text-sm font-mono break-all">{inquiry.product.id}</p>
+              <p className="text-sm font-mono break-all">
+                {inquiry.product.id}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -260,7 +259,7 @@ export default function InquiryDetails() {
                           : String(value)}
                       </dd>
                     </div>
-                  )
+                  ),
               )}
             </dl>
           </CardContent>

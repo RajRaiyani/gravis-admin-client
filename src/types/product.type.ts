@@ -46,7 +46,7 @@ export interface Product {
   created_at?: string;
   updated_at?: string;
   category?: ProductCategory;
-  images?: ProductImageData[];
+  primary_image?: ProductImage;
   filter_options?: ProductFilterOption[];
 }
 

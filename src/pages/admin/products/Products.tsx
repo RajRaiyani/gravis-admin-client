@@ -2,10 +2,7 @@ import { Link } from "react-router-dom";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  useGetProductsInfinite,
-  useDeleteProduct,
-} from "@/hooks/useProducts";
+import { useGetProductsInfinite, useDeleteProduct } from "@/hooks/useProducts";
 import type { Product } from "@/types/product.type";
 import { useState, useRef, useCallback, useEffect } from "react";
 
@@ -29,7 +26,7 @@ export default function Products() {
         fetchNextPage();
       }
     },
-    [hasNextPage, isFetchingNextPage, fetchNextPage]
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
   );
 
   useEffect(() => {
@@ -70,7 +67,7 @@ export default function Products() {
   }
 
   const products = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page?.data) ? page.data : Array.isArray(page) ? page : []
+    Array.isArray(page?.data) ? page.data : Array.isArray(page) ? page : [],
   );
 
   const formatPrice = (priceInRupees: number) => {
@@ -109,7 +106,7 @@ export default function Products() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {products.map((product: Product) => {
-            const primaryImageUrl = getPrimaryImage(product);
+            const primaryImageUrl = product.primary_image?.url;
             return (
               <Link to={`/products/${product.id}`}>
                 <Card
@@ -139,18 +136,20 @@ export default function Products() {
                               product.product_label === "New"
                                 ? "bg-blue-500"
                                 : product.product_label === "Best Seller"
-                                ? "bg-green-500"
-                                : product.product_label === "Hot Deal"
-                                ? "bg-red-500"
-                                : product.product_label === "Limited Edition"
-                                ? "bg-purple-500"
-                                : product.product_label === "Top Rated"
-                                ? "bg-yellow-500"
-                                : product.product_label === "Sale"
-                                ? "bg-orange-500"
-                                : product.product_label === "Exclusive"
-                                ? "bg-indigo-500"
-                                : "bg-gray-500"
+                                  ? "bg-green-500"
+                                  : product.product_label === "Hot Deal"
+                                    ? "bg-red-500"
+                                    : product.product_label ===
+                                        "Limited Edition"
+                                      ? "bg-purple-500"
+                                      : product.product_label === "Top Rated"
+                                        ? "bg-yellow-500"
+                                        : product.product_label === "Sale"
+                                          ? "bg-orange-500"
+                                          : product.product_label ===
+                                              "Exclusive"
+                                            ? "bg-indigo-500"
+                                            : "bg-gray-500"
                             }`}
                           >
                             {product.product_label}
@@ -197,7 +196,7 @@ export default function Products() {
                     <div className="flex items-center justify-between mt-4">
                       <span className="text-lg font-semibold">
                         {formatPrice(
-                          product.sale_price_in_rupee ?? product.sale_price
+                          product.sale_price_in_rupee ?? product.sale_price,
                         )}
                       </span>
                       {product.tags && product.tags.length > 0 && (
