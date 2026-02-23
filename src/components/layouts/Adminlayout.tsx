@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Package,
-  ShoppingCart,
+  // ShoppingCart,
   LogOut,
   Menu,
   X,
@@ -31,10 +31,10 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { label: "Dashboard", path: "/", icon: LayoutDashboard },
   { label: "Products", path: "/products", icon: Package },
-  { label: "Orders", path: "/orders", icon: ShoppingCart },
+  // { label: "Orders", path: "/orders", icon: ShoppingCart },
   { label: "Customers", path: "/customers", icon: Users },
   // { label: "Categories", path: "/categories", icon: FolderTree },
-  { label: "Product Categories", path: "/product-categories", icon: Tags },
+  { label: "Categories", path: "/product-categories", icon: Tags },
   { label: "Inquiries", path: "/inquiries", icon: MessageSquare },
   // { label: "Analytics", path: "/analytics", icon: BarChart3 },
   // { label: "Settings", path: "/settings", icon: Settings },

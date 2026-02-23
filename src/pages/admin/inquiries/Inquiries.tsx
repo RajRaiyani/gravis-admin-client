@@ -126,7 +126,7 @@ export default function Inquiries() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center h-64">
         <p className="text-destructive">Failed to load inquiries</p>
       </div>
     );
@@ -199,13 +199,13 @@ export default function Inquiries() {
 
       {/* Inquiries List */}
       {isLoading && (
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center h-64">
           <p>Loading...</p>
         </div>
       )}
       {inquiries.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
+          <CardContent className="py-12">
             <p className="text-muted-foreground">No inquiries found</p>
           </CardContent>
         </Card>
@@ -217,87 +217,98 @@ export default function Inquiries() {
               return (
                 <Card
                   key={inquiry.id}
-                  className="hover:shadow-md transition-shadow"
+                  className="hover:shadow-md transition-shadow border-border/70"
                 >
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          <select
+                            value={inquiry.status}
+                            onChange={(e) =>
+                              handleStatusChange(inquiry.id, e.target.value)
+                            }
+                            disabled={isUpdating}
+                            className={`h-7 min-w-[120px] px-2.5 rounded-full text-xs font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed ${
                               statusColors[inquiry.status] ||
                               statusColors.pending
                             }`}
                           >
-                            {inquiry.status.replace("_", " ").toUpperCase()}
-                          </span>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                          </select>
                           <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-muted text-muted-foreground capitalize">
                             {inquiry.type.replace("_", " ")}
                           </span>
+                          {inquiry.product && (
+                            <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                              {inquiry.product.name}
+                            </span>
+                          )}
                         </div>
-                        <CardTitle className="text-lg mb-2">
+                        <CardTitle className="text-lg mb-1 truncate">
                           {contact.name}
                         </CardTitle>
-                        <div className="space-y-1 text-sm text-muted-foreground">
-                          <p>
-                            <strong>Email:</strong> {contact.email}
+                        <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                          <p className="truncate">
+                            <span className="font-medium text-foreground">
+                              Email:
+                            </span>{" "}
+                            {contact.email}
                           </p>
-                          <p>
-                            <strong>Phone:</strong> {contact.phone}
+                          <p className="truncate">
+                            <span className="font-medium text-foreground">
+                              Phone:
+                            </span>{" "}
+                            {contact.phone}
                           </p>
-                          <p>
-                            <strong>Date:</strong>{" "}
-                            {formatDate(inquiry.created_at)}
-                          </p>
-                          {inquiry.product && (
-                            <p>
-                              <strong>Product:</strong> {inquiry.product.name}{" "}
-                              (₹
-                              {Number(inquiry.product.sale_price_in_rupee).toLocaleString()}
-                              )
-                            </p>
-                          )}
                           {inquiry.meta_data?.quantity != null && (
                             <p>
-                              <strong>Quantity:</strong>{" "}
+                              <span className="font-medium text-foreground">
+                                Quantity:
+                              </span>{" "}
                               {inquiry.meta_data.quantity}
+                            </p>
+                          )}
+                          {inquiry.product && (
+                            <p>
+                              <span className="font-medium text-foreground">
+                                Price:
+                              </span>{" "}
+                              ₹
+                              {Number(
+                                inquiry.product.sale_price_in_rupee,
+                              ).toLocaleString()}
                             </p>
                           )}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(inquiry.id)}
-                        disabled={isDeleting && deletingId === inquiry.id}
-                        className="shrink-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-start justify-between gap-2 sm:flex-col sm:items-end sm:justify-start shrink-0">
+                        <p className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDate(inquiry.created_at)}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(inquiry.id)}
+                          disabled={isDeleting && deletingId === inquiry.id}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium mb-1">Message:</p>
+                  <CardContent className="space-y-3 pt-0">
+                    <div className="rounded-md bg-muted/40 px-3 py-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                        Message
+                      </p>
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-3">
                         {inquiry.message}
                       </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">Status:</span>
-                      <select
-                        value={inquiry.status}
-                        onChange={(e) =>
-                          handleStatusChange(inquiry.id, e.target.value)
-                        }
-                        disabled={isUpdating}
-                        className="w-[150px] h-8 px-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
-                      </select>
                     </div>
                   </CardContent>
                 </Card>
@@ -308,7 +319,7 @@ export default function Inquiries() {
           {/* Infinite scroll trigger and loading */}
           {hasMoreItems && <div ref={triggerRef} className="h-4" />}
           {isScrollLoading && (
-            <div className="py-4 text-center text-sm text-muted-foreground">
+            <div className="py-4 text-sm text-muted-foreground">
               Loading more...
             </div>
           )}
