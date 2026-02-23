@@ -84,6 +84,7 @@ export interface UpdateProductData {
 export interface ProductFilterParams {
   category_id?: string;
   search?: string;
+  option_ids?: string[];
   offset?: number;
   limit?: number;
 }

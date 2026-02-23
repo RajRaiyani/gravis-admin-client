@@ -1,42 +1,64 @@
-import axios from './httpRequest';
+import axios from "./httpRequest";
 import type {
   CreateProductData,
   UpdateProductData,
   ProductFilterParams,
-} from '@/types/product.type';
+} from "@/types/product.type";
 
-export const listProducts = (params?: ProductFilterParams) => {
-  const url = `/products`;
-  return axios({ method: 'GET', url, params });
-};
+/**
+ * Serialize query params so arrays are sent as repeated keys:
+ * filter_option_ids=id1&filter_option_ids=id2 (backend expects this format)
+ */
+function serializeParams(params: Record<string, unknown>): string {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value == null || value === "") return;
+    if (Array.isArray(value)) {
+      value.forEach((v) => search.append(key, String(v)));
+    } else {
+      search.set(key, String(value));
+    }
+  });
+  return search.toString();
+}
 
-export const getProduct = (id: string) => {
-  const url = `/products/${id}`;
-  return axios({ method: 'GET', url });
-};
+export function listProducts(params?: ProductFilterParams) {
+  const { option_ids, ...rest } = params ?? {};
+  const requestParams: Record<string, unknown> = { ...rest };
+  const ids = (option_ids ?? []).filter(Boolean);
+  if (ids.length > 0) {
+    requestParams.filter_option_ids = ids;
+  }
+  return axios.get("/products", {
+    params: requestParams,
+    paramsSerializer: serializeParams,
+  });
+}
 
-export const createProduct = (data: CreateProductData) => {
-  const url = `/products`;
-  return axios({ method: 'POST', url, data });
-};
+export function getProduct(id: string) {
+  return axios({ method: "GET", url: `/products/${id}` });
+}
 
-export const updateProduct = (id: string, data: UpdateProductData) => {
-  const url = `/products/${id}`;
-  return axios({ method: 'PUT', url, data });
-};
+export function createProduct(data: CreateProductData) {
+  return axios({ method: "POST", url: "/products", data });
+}
 
-export const deleteProduct = (id: string) => {
-  const url = `/products/${id}`;
-  return axios({ method: 'DELETE', url });
-};
+export function updateProduct(id: string, data: UpdateProductData) {
+  return axios({ method: "PUT", url: `/products/${id}`, data });
+}
 
-export const addProductImage = (productId: string, imageId: string) => {
-  const url = `/products/${productId}/images`;
-  return axios({ method: 'POST', url, data: { image_id: imageId } });
-};
+export function deleteProduct(id: string) {
+  return axios({ method: "DELETE", url: `/products/${id}` });
+}
 
-export const deleteProductImage = (imageId: string) => {
-  const url = `/products/images/${imageId}`;
-  return axios({ method: 'DELETE', url });
-};
+export function addProductImage(productId: string, imageId: string) {
+  return axios({
+    method: "POST",
+    url: `/products/${productId}/images`,
+    data: { image_id: imageId },
+  });
+}
 
+export function deleteProductImage(imageId: string) {
+  return axios({ method: "DELETE", url: `/products/images/${imageId}` });
+}

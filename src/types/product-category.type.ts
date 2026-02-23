@@ -30,3 +30,21 @@ export interface UpdateProductCategoryData {
   banner_image_id?: string;
 }
 
+/** One filter option (e.g. "Samsung", "32 inch") — id is sent as option_ids to products API */
+export interface CategoryFilterOption {
+  id: string;
+  category_filter_id: string;
+  value: string;
+  sort_order?: number;
+}
+
+/** Category filter (e.g. "Brand") with its options from GET /product-categories/:id/filters */
+export interface CategoryFilterWithOptions {
+  id: string;
+  category_id: string;
+  name: string;
+  slug?: string;
+  sort_order?: number;
+  options: CategoryFilterOption[];
+}
+
