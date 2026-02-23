@@ -17,6 +17,10 @@ export const productListQuerySchema = z.object({
     .transform((v) => (v === "" ? undefined : v)),
   search: z.string().trim().toLowerCase().optional(),
   option_ids: optionIdsSchema,
+  featured: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v === "true")),
 });
 
 export type ProductListQuery = z.infer<typeof productListQuerySchema>;
@@ -41,9 +45,10 @@ const defaultQuery: ProductListQuery = {
   category_id: undefined,
   search: undefined,
   option_ids: [],
+  featured: undefined,
 };
 
-/** Read and validate product list query from URL (category_id, search, option_ids) */
+/** Read and validate product list query from URL (category_id, search, option_ids, featured) */
 export function getQueryFromSearchParams(searchParams: URLSearchParams): ProductListQuery {
   const record = searchParamsToRecord(searchParams);
   const result = productListQuerySchema.safeParse(record);

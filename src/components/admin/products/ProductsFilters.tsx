@@ -19,12 +19,10 @@ export function ProductsFilters({ className }: ProductsFiltersProps) {
   const [value, setValue] = useState(searchFromUrl);
   const debouncedValue = useDebounce(value, DEBOUNCE_MS);
 
-  // Keep input in sync when URL changes (e.g. back button)
   useEffect(() => {
     setValue(searchFromUrl);
   }, [searchFromUrl]);
 
-  // Push debounced value to URL
   useEffect(() => {
     if (debouncedValue === searchFromUrl) return;
     const params = new URLSearchParams(searchParams.toString());
@@ -39,8 +37,9 @@ export function ProductsFilters({ className }: ProductsFiltersProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-2.5 shadow-sm",
-        "focus-within:border-[#0046B7] focus-within:ring-2 focus-within:ring-[#0046B7]/20",
+        "flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm transition-colors",
+        "focus-within:border-[#0046B7] focus-within:ring-2 focus-within:ring-[#0046B7]/15",
+        "hover:border-slate-300",
         className,
       )}
     >

@@ -27,7 +27,6 @@ export function CategoryFiltersSidebar({
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
 
-  /** Update URL query params and replace history (keeps filter state in URL) */
   const updateUrlParams = (updates: Record<string, string | string[] | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
@@ -71,26 +70,25 @@ export function CategoryFiltersSidebar({
       )}
       aria-label="Category and filters"
     >
-      <aside className="overflow-hidden rounded-md border border-slate-200/80 bg-white shadow-sm">
+      <aside className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div
           className={cn(
             "flex flex-col overflow-y-auto",
             embedded ? "max-h-full" : "max-h-[85vh]",
           )}
         >
-          {/* Category dropdown */}
           <section
             className="border-b border-slate-100 bg-slate-50/80 px-4 py-4"
             aria-label="Category"
           >
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
               Category
             </h3>
             <select
               value={currentCategoryId ?? ALL_CATEGORIES_VALUE}
               onChange={(e) => handleCategoryChange(e.target.value)}
               aria-label="Select category"
-              className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-[#0046B7] focus:ring-2 focus:ring-[#0046B7]/20"
+              className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm transition-colors focus:border-[#0046B7] focus:outline-none focus:ring-2 focus:ring-[#0046B7]/20"
             >
               <option value={ALL_CATEGORIES_VALUE}>All categories</option>
               {categories.map((cat) => (
@@ -101,19 +99,18 @@ export function CategoryFiltersSidebar({
             </select>
           </section>
 
-          {/* Filter options (only when a category is selected) */}
           {currentCategoryId && (
             <section className="flex flex-1 flex-col p-4" aria-label="Filters">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                     <SlidersHorizontal className="size-4" aria-hidden />
                   </span>
                   <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Filters
                   </h2>
                   {hasActiveFilters && (
-                    <span className="rounded-full bg-[#0046B7] px-2 py-0.5 text-[10px] font-medium text-white">
+                    <span className="rounded-full bg-[#0046B7] px-2 py-0.5 text-xs font-medium text-white">
                       {selectedOptionIds.length}
                     </span>
                   )}
@@ -122,23 +119,23 @@ export function CategoryFiltersSidebar({
                   <button
                     type="button"
                     onClick={handleClearFilters}
-                    className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-slate-500 hover:bg-slate-100"
+                    className="shrink-0 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
                   >
-                    <X className="size-4" aria-hidden />
+                    <X className="mr-1 inline-block size-4 align-middle" aria-hidden />
                     Clear
                   </button>
                 )}
               </div>
 
               {categoryFilters.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center text-sm text-slate-500">
+                <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center text-sm text-slate-500">
                   No filters for this category.
                 </p>
               ) : (
                 <div className="flex flex-col gap-4">
                   {categoryFilters.map((filter) => (
                     <div key={filter.id}>
-                      <h3 className="mb-2 text-sm font-semibold uppercase text-slate-800">
+                      <h3 className="mb-2 text-sm font-semibold text-slate-800">
                         {filter.name}
                       </h3>
                       <ul className="flex flex-col gap-0.5">
@@ -150,15 +147,15 @@ export function CategoryFiltersSidebar({
                                 type="button"
                                 onClick={() => handleOptionToggle(option.id)}
                                 className={cn(
-                                  "flex w-full cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm transition-colors",
+                                  "flex w-full cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2.5 text-left text-sm transition-colors",
                                   isChecked
-                                    ? "text-[#0046B7]"
-                                    : "text-slate-700 hover:bg-slate-100/80",
+                                    ? "bg-[#0046B7]/10 text-[#0046B7] font-medium"
+                                    : "text-slate-700 hover:bg-slate-50",
                                 )}
                               >
                                 <span
                                   className={cn(
-                                    "flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2",
+                                    "flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2 transition-colors",
                                     isChecked
                                       ? "border-[#0046B7] bg-[#0046B7] text-white"
                                       : "border-slate-300 bg-white",
@@ -182,7 +179,7 @@ export function CategoryFiltersSidebar({
                                     </svg>
                                   )}
                                 </span>
-                                <span className="font-medium">{option.value}</span>
+                                <span className="truncate">{option.value}</span>
                               </button>
                             </li>
                           );

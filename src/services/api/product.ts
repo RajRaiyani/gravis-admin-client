@@ -23,11 +23,14 @@ function serializeParams(params: Record<string, unknown>): string {
 }
 
 export function listProducts(params?: ProductFilterParams) {
-  const { option_ids, ...rest } = params ?? {};
+  const { option_ids, only_featured, ...rest } = params ?? {};
   const requestParams: Record<string, unknown> = { ...rest };
   const ids = (option_ids ?? []).filter(Boolean);
   if (ids.length > 0) {
     requestParams.filter_option_ids = ids;
+  }
+  if (only_featured === true) {
+    requestParams.only_featured = true;
   }
   return axios.get("/products", {
     params: requestParams,

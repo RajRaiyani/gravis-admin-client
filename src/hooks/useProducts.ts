@@ -26,7 +26,7 @@ export const keys = {
   all: ["products"] as const,
   lists: () => [...keys.all, "list"] as const,
   list: (params?: ProductFilterParams) => [...keys.lists(), params] as const,
-  /** Key includes serialized option_ids so refetch triggers when filter selection changes */
+  /** Key includes serialized option_ids and only_featured so refetch triggers when filters change */
   infiniteList: (params?: Omit<ProductFilterParams, "offset" | "limit">) =>
     [
       ...keys.lists(),
@@ -34,6 +34,7 @@ export const keys = {
       params?.category_id ?? "",
       params?.search ?? "",
       (params?.option_ids ?? []).slice().sort().join(","),
+      params?.only_featured ?? false,
     ] as const,
   details: () => [...keys.all, "detail"] as const,
   detail: (id: string) => [...keys.details(), id] as const,

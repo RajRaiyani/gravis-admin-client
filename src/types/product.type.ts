@@ -85,6 +85,7 @@ export interface ProductFilterParams {
   category_id?: string;
   search?: string;
   option_ids?: string[];
+  only_featured?: boolean;
   offset?: number;
   limit?: number;
 }

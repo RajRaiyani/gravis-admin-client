@@ -1,5 +1,5 @@
-import { Link, useSearchParams } from "react-router-dom";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Plus, Edit, Trash2, Loader2, Star } from "lucide-react";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,15 +34,8 @@ interface ProductCard {
   filter_options?: { filter_option_id: string }[];
 }
 
-const PRODUCT_LABEL_COLORS: Record<string, string> = {
-  New: "bg-blue-500",
-  "Best Seller": "bg-green-500",
-  "Hot Deal": "bg-red-500",
-  "Limited Edition": "bg-purple-500",
-  "Top Rated": "bg-yellow-500",
-  Sale: "bg-orange-500",
-  Exclusive: "bg-indigo-500",
-};
+/** Single color for all product labels (e.g. New, Sale, Best Seller) */
+const PRODUCT_LABEL_CLASS = "bg-slate-600 text-white";
 
 /** Normalize API response to array (handles both raw array and { data: [] }) */
 function toArray<T>(data: unknown): T[] {
@@ -102,9 +95,29 @@ export default function Products() {
         query.option_ids && query.option_ids.length > 0
           ? query.option_ids
           : undefined,
+      only_featured: query.featured === true ? true : undefined,
     }),
-    [query.category_id, query.search, query.option_ids],
+    [query.category_id, query.search, query.option_ids, query.featured],
   );
+
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const updateUrlParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value == null) params.delete(key);
+        else params.set(key, value);
+      });
+      navigate(`${pathname}?${params.toString()}`, { replace: true });
+    },
+    [pathname, navigate, searchParams],
+  );
+  const toggleFeatured = useCallback(() => {
+    updateUrlParams({
+      featured: query.featured ? null : "true",
+    });
+  }, [query.featured, updateUrlParams]);
 
   const { data: categoriesData } = useGetProductCategories();
   const { data: filtersData } = useGetFilters(query.category_id ?? "");
@@ -170,39 +183,62 @@ export default function Products() {
       (data?.pages ?? []).flatMap((p) => toArray<ProductCard>(p)) as ProductCard[],
     [data?.pages],
   );
-  const products = useMemo(
-    () => filterProductsByOptions(rawProducts, query.option_ids ?? []),
-    [rawProducts, query.option_ids],
-  );
+  const products = useMemo(() => {
+    let list = filterProductsByOptions(rawProducts, query.option_ids ?? []);
+    if (query.featured === true) {
+      list = list.filter((p) => p.is_featured === true);
+    }
+    return list;
+  }, [rawProducts, query.option_ids, query.featured]);
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        Loading...
+      <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-xl border border-slate-200 bg-slate-50/50">
+        <Loader2 className="h-10 w-10 animate-spin text-[#0046B7]" aria-hidden />
+        <p className="text-sm font-medium text-slate-600">Loading products...</p>
       </div>
     );
   }
   if (error) {
     return (
-      <div className="flex h-64 items-center justify-center text-destructive">
-        Failed to load products
+      <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-xl border border-red-200 bg-red-50/50">
+        <p className="text-sm font-medium text-destructive">Failed to load products</p>
+        <p className="text-xs text-slate-600">Please try again later.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Products</h1>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          Products
+        </h1>
         <Link to="/products/create">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button
+            size="default"
+            className="gap-2 bg-[#0046B7] font-medium hover:bg-[#003d9e]"
+          >
+            <Plus className="size-4" aria-hidden />
             Add Product
           </Button>
         </Link>
       </header>
 
-      <ProductsFilters className="max-w-xl" />
+      <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+        <ProductsFilters className="min-w-0 flex-1 sm:max-w-md" />
+        <label className="flex cursor-pointer select-none items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-2.5 shadow-sm transition-colors hover:bg-slate-100/80 hover:border-slate-300 has-[:checked]:border-[#0046B7] has-[:checked]:bg-[#0046B7]/10">
+          <input
+            type="checkbox"
+            checked={query.featured === true}
+            onChange={toggleFeatured}
+            className="h-4 w-4 rounded border-slate-300 text-[#0046B7] focus:ring-2 focus:ring-[#0046B7]/30"
+            aria-label="Show only featured products"
+          />
+          <Star className="size-4 shrink-0 text-amber-500" aria-hidden />
+          <span className="text-sm font-medium text-slate-700">Featured only</span>
+        </label>
+      </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
         <CategoryFiltersSidebar
@@ -214,18 +250,22 @@ export default function Products() {
 
         <div className="min-w-0 flex-1">
           {products.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No products found</p>
+            <Card className="overflow-hidden border-slate-200 shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+                <p className="text-base font-medium text-slate-600">No products found</p>
+                <p className="text-sm text-slate-500">
+                  Try adjusting search or filters, or add a new product.
+                </p>
                 <Link to="/products/create">
-                  <Button variant="outline" className="mt-4">
+                  <Button variant="outline" size="default" className="mt-2 gap-2">
+                    <Plus className="size-4" />
                     Create your first product
                   </Button>
                 </Link>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {products.map((product) => (
                 <ProductCardItem
                   key={product.id}
@@ -240,11 +280,11 @@ export default function Products() {
 
           <div
             ref={loadMoreRef}
-            className="flex justify-center py-8"
+            className="flex justify-center py-10"
             aria-hidden
           >
             {isFetchingNextPage && (
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <Loader2 className="h-8 w-8 animate-spin text-[#0046B7]" />
             )}
           </div>
         </div>
@@ -273,92 +313,98 @@ function ProductCardItem({
   const price = Number(
     product.sale_price_in_rupee ?? product.sale_price,
   ).toFixed(2);
-  const labelColor =
-    PRODUCT_LABEL_COLORS[product.product_label ?? ""] ?? "bg-gray-500";
 
   return (
-    <Link to={`/products/${product.id}`}>
-      <Card className="relative transition-shadow hover:shadow-md">
-        <CardHeader>
+    <Link to={`/products/${product.id}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0046B7] focus-visible:ring-offset-2 rounded-xl">
+      <Card className="relative h-full overflow-hidden border-slate-200 transition-all hover:shadow-md hover:border-slate-300">
+        <CardHeader className="p-0">
           {product.primary_image?.url && (
-            <div className="relative mb-4">
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
               <img
                 src={product.primary_image.url}
                 alt={product.name}
-                className="h-full w-full rounded-md object-cover"
+                className="h-full w-full object-cover transition-transform hover:scale-[1.02]"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}
               />
-              {product.is_featured && (
-                <span className="absolute right-2 top-2 rounded-full bg-yellow-400 px-2 py-1 text-xs font-bold text-white">
-                  ⭐ Featured
-                </span>
-              )}
-              {product.product_label && (
-                <span
-                  className={`absolute left-2 top-2 rounded px-2 py-1 text-xs font-medium text-white ${labelColor}`}
-                >
-                  {product.product_label}
-                </span>
-              )}
+              <div className="absolute left-2 top-2 flex flex-wrap gap-1.5">
+                {product.is_featured && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
+                    <Star className="size-3 fill-current" aria-hidden />
+                    Featured
+                  </span>
+                )}
+                {product.product_label && (
+                  <span
+                    className={`rounded-md px-2 py-0.5 text-xs font-medium shadow-sm ${PRODUCT_LABEL_CLASS}`}
+                  >
+                    {product.product_label}
+                  </span>
+                )}
+              </div>
             </div>
           )}
-          <CardTitle className="flex items-center justify-between">
-            <span className="line-clamp-2">{product.name}</span>
-            <div className="ml-2 flex gap-2">
-              <Link
-                to={`/products/${product.id}/edit`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Button variant="ghost" size="sm">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onDelete(product.id);
-                }}
-                disabled={isDeleting && deletingId === product.id}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          </CardTitle>
+          <div className="flex flex-col gap-2 p-4">
+            <CardTitle className="flex items-start justify-between gap-2 text-base leading-snug">
+              <span className="line-clamp-2 flex-1 font-semibold text-slate-900">
+                {product.name}
+              </span>
+              <div className="flex shrink-0 gap-1">
+                <Link
+                  to={`/products/${product.id}/edit`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-[#0046B7]"
+                  aria-label="Edit product"
+                >
+                  <Edit className="size-4" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onDelete(product.id);
+                  }}
+                  disabled={isDeleting && deletingId === product.id}
+                  className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-50 hover:text-destructive disabled:opacity-50"
+                  aria-label="Delete product"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            </CardTitle>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3 pt-0">
           {product.category && (
-            <p className="mb-2 text-sm text-muted-foreground">
-              Category: {product.category.name}
+            <p className="line-clamp-1 text-sm text-slate-500">
+              {product.category.name}
             </p>
           )}
           {product.description && (
-            <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">
+            <p className="line-clamp-2 text-sm text-slate-600">
               {product.description}
             </p>
           )}
           {product.warranty_label && (
-            <p className="mb-2 text-sm text-gray-600">
-              🛡️ {product.warranty_label}
+            <p className="text-sm text-slate-600">
+              <span className="text-slate-400" aria-hidden>🛡️</span> {product.warranty_label}
             </p>
           )}
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-lg font-semibold">₹{price}</span>
+          <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+            <span className="text-lg font-bold text-slate-900">₹{price}</span>
             {product.tags && product.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap items-center gap-1">
                 {product.tags.slice(0, 2).map((tag, i) => (
                   <span
                     key={i}
-                    className="rounded bg-muted px-2 py-1 text-xs"
+                    className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
                   >
                     {tag}
                   </span>
                 ))}
                 {product.tags.length > 2 && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-slate-400">
                     +{product.tags.length - 2}
                   </span>
                 )}
