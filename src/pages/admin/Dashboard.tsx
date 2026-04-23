@@ -5,6 +5,7 @@ import {
   Package,
   Tags,
   MessageSquare,
+  ShoppingCart,
   ArrowRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,15 @@ const inquiryStatusConfig = [
   { key: "in_progress" as const, label: "In Progress", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
   { key: "resolved" as const, label: "Resolved", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
   { key: "closed" as const, label: "Closed", color: "bg-muted text-muted-foreground" },
+];
+
+const orderStatusConfig = [
+  { key: "pending" as const, label: "Pending", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" },
+  { key: "processing" as const, label: "Processing", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
+  { key: "out_for_delivery" as const, label: "Out for delivery", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400" },
+  { key: "delivered" as const, label: "Delivered", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
+  { key: "complete" as const, label: "Complete", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  { key: "cancel" as const, label: "Cancelled", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
 ];
 
 const statCards = [
@@ -46,6 +56,13 @@ const statCards = [
     href: "/inquiries",
     description: "Total inquiries",
   },
+  {
+    title: "Orders",
+    valueKey: "orders" as const,
+    icon: ShoppingCart,
+    href: "/orders",
+    description: "Total orders",
+  },
 ];
 
 export default function Dashboard() {
@@ -72,7 +89,16 @@ export default function Dashboard() {
     products: 0,
     product_categories: 0,
     inquiries: 0,
+    orders: 0,
     inquiries_by_status: { pending: 0, in_progress: 0, resolved: 0, closed: 0 },
+    orders_by_status: {
+      pending: 0,
+      processing: 0,
+      out_for_delivery: 0,
+      delivered: 0,
+      complete: 0,
+      cancel: 0,
+    },
   };
 
   return (
@@ -89,7 +115,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {statCards.map(({ title, valueKey, icon: Icon, href, description }) => (
           <Link key={valueKey} to={href}>
             <Card className="hover:shadow-md transition-shadow h-full">
@@ -141,6 +167,40 @@ export default function Dashboard() {
                   className={`rounded-full px-2.5 py-0.5 text-sm font-medium ${color}`}
                 >
                   {stats.inquiries_by_status[key]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5 text-primary" />
+            Orders by status
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Current breakdown of order lifecycle statuses.{" "}
+            <Link to="/orders" className="text-primary font-medium hover:underline">
+              Manage orders
+            </Link>
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {orderStatusConfig.map(({ key, label, color }) => (
+              <div
+                key={key}
+                className="flex items-center justify-between rounded-lg border p-4"
+              >
+                <span className="text-sm font-medium text-muted-foreground">
+                  {label}
+                </span>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-sm font-medium ${color}`}
+                >
+                  {stats.orders_by_status[key]}
                 </span>
               </div>
             ))}

@@ -14,6 +14,8 @@ import Inquiries from "@/pages/admin/inquiries/Inquiries";
 import InquiryDetails from "@/pages/admin/inquiries/InquiryDetails";
 import Customers from "@/pages/admin/customers/Customers";
 import CustomerDetails from "@/pages/admin/customers/CustomerDetails"; // Add this import
+import Orders from "@/pages/admin/orders/Orders";
+import OrderDetails from "@/pages/admin/orders/OrderDetails";
 import { Toaster } from "react-hot-toast";
 
 const queryClient = new QueryClient({
@@ -61,8 +63,11 @@ function AppRoutes() {
           <Route path="customers" element={<Customers />} />
           <Route path="customers/:id" element={<CustomerDetails />} /> {/* Add this line */}
 
+          {/* Orders Routes */}
+          <Route path="orders" element={<Orders />} />
+          <Route path="orders/:id" element={<OrderDetails />} />
+
           {/* Other Routes */}
-          <Route path="orders" element={<h1>Orders</h1>} />
           <Route path="categories" element={<h1>Categories</h1>} />
           <Route path="analytics" element={<h1>Analytics</h1>} />
           <Route path="settings" element={<h1>Settings</h1>} />
