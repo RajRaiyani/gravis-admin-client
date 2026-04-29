@@ -2,7 +2,30 @@
 import { createContext, useState, useContext, type ReactNode } from "react";
 
 import type { AuthUser } from "@/types/auth.type";
-import Cookies from "js-cookie";
+import {
+  clearStoredAuth,
+  getStoredToken,
+  getStoredUserJson,
+  setStoredAuth,
+} from "@/utils/authStorage";
+
+function getInitialAuthState(): { user: AuthUser | null; token: string | null } {
+  if (typeof window === "undefined") {
+    return { user: null, token: null };
+  }
+  const token = getStoredToken();
+  if (!token) return { user: null, token: null };
+  const raw = getStoredUserJson();
+  let user: AuthUser | null = null;
+  if (raw) {
+    try {
+      user = JSON.parse(raw) as AuthUser;
+    } catch {
+      user = null;
+    }
+  }
+  return { user, token };
+}
 
 export interface AuthContextType {
   authUser: AuthUser | null;
@@ -14,27 +37,22 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-const defaultAuthUser = JSON.parse(Cookies.get("user") || "null");
-const defaultAccessToken = Cookies.get("token") || null;
+const initialAuth = getInitialAuthState();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [authUser, setAuthUser] = useState<AuthUser | null>(defaultAuthUser);
-  const [token, setToken] = useState<string | null>(defaultAccessToken);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(initialAuth.user);
+  const [token, setToken] = useState<string | null>(initialAuth.token);
 
   const isLoggedIn = !!token;
 
   function login(AuthUser: AuthUser, token: string, expiresAt: string) {
-    Cookies.set("user", JSON.stringify(AuthUser), {
-      expires: new Date(expiresAt),
-    });
-    Cookies.set("token", token, { expires: new Date(expiresAt) });
+    setStoredAuth(JSON.stringify(AuthUser), token, expiresAt);
     setAuthUser(AuthUser);
     setToken(token);
   }
 
   function logout() {
-    Cookies.remove("user");
-    Cookies.remove("token");
+    clearStoredAuth();
     setAuthUser(null);
     setToken(null);
   }
